@@ -45,10 +45,12 @@ install:
     - python setup.py develop
 
 script: 
+    # test fortran-only "basic" program
     - cd build
     - cmake ..
     - make
-
+    - cd ..
+    # separately (previous 4 lines not needed) test python access to Glow
     - coverage run tests/test.py -v
 
 after_success: coveralls
