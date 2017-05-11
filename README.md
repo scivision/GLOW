@@ -29,4 +29,18 @@ While many users use the Python interface to Glow, users on HPCC may want to use
     make
     cd ..
 
+This creates:
 
+============  ===================
+executable    description
+============  ===================
+basic           basic GLOW example
+basicmpi        basic MPI GLOW example
+============  ===================
+
+Note the `*mpi` examples are only creates if MPI is installed on your PC/system.
+
+### MPI Prereq
+Allows parallel execution of GLOW Fortran code for HPCC.
+
+    sudo apt install libopenmpi-dev
