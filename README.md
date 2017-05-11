@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/scivision/GLOW.svg?branch=master)](https://travis-ci.org/scivision/GLOW)
+
 # GLOW
 The GLobal airglOW Model
 
