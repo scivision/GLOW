@@ -35,12 +35,15 @@ This creates:
 executable  |  description
 ------------|--------------
 basic        |   basic GLOW example
-basicmpi     |   basic MPI GLOW example
 
-
-Note the `*mpi` examples are only created if MPI is installed on your PC/system.
+If MPI libraries are found by CMake, `basic` will be MPI compiled.
 
 ### MPI Prereq
 Allows parallel execution of GLOW Fortran code for HPCC.
 
     sudo apt install libopenmpi-dev
+    
+### NetCDF prereq
+allows writing data in NetCDF (optional).
+
+    sudo apt install libnetcdf-dev
