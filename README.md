@@ -11,9 +11,22 @@ This directory contains:
    Subdirectory data/ contains input data files,
    Subdirectory data/iri90 contains IRI input data files
 
-## Compile
+
+## Python install
+This command automatically compiles the Fortran code to access from Python on any platform.
+
+    python setup.py develop
+
+You can then run the self-tests with
+
+    python tests/test.py -v
+
+## Fortran-only mode
+While many users use the Python interface to Glow, users on HPCC may want to use MPI directly in Fortran using the Makefiles or CMake. Here's how to compile the ``basic`` example with CMake.
 
     cd build
     cmake ..
     make
     cd ..
+
+
