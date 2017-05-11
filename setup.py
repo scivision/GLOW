@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 req = ['nose','numpy','matplotlib','seaborn']
-pipreq=[]
+pipreq=['sciencedates']
 # %%
 import pip
 try:
@@ -8,7 +8,7 @@ try:
     conda.cli.main('install',*req)
 except Exception:
     pip.main(['install'] + req)
-#pip.main(['install'] + pipreq)
+pip.main(['install'] + pipreq)
 # %%
 import setuptools # enables develop
 from numpy.distutils.core import Extension, setup
