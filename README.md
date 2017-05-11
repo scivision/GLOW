@@ -31,12 +31,12 @@ While many users use the Python interface to Glow, users on HPCC may want to use
 
 This creates:
 
-============  ===================
-executable    description
-============  ===================
-basic           basic GLOW example
-basicmpi        basic MPI GLOW example
-============  ===================
+
+executable  |  description
+------------|--------------
+basic        |   basic GLOW example
+basicmpi     |   basic MPI GLOW example
+
 
 Note the `*mpi` examples are only creates if MPI is installed on your PC/system.
 
