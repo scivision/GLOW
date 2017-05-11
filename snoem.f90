@@ -11,7 +11,7 @@
 
     subroutine snoem(doy, kp, f107, z, mlat, nozm)
 
-      use cglow,only: data_dir
+      use cglow,only: data_dir,sind,cosd
 
       implicit none
       save
@@ -34,7 +34,7 @@
       if (ifirst == 1) then
         ifirst = 0
         filepath = trim(data_dir)//'snoem_eof.dat'
-        open(unit=1,file=filepath,status='old',readonly)
+        open(unit=1,file=filepath,status='old', action='read')
         read(1,*) (z(k),k=1,16)
         read(1,*) (mlat(j),j=1,33)
         read(1,*) ((no_mean(j,k),j=1,33),k=1,16)

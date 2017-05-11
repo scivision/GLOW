@@ -115,7 +115,7 @@ subroutine ephoto
     ifirst = 0
 
     filepath = trim(data_dir)//'ephoto_xn2.dat'
-    open(unit=1,file=filepath,status='old',readonly)
+    open(unit=1,file=filepath,status='old',action='read')
     read(1,*)
     read(1,*)
     read(1,*)
@@ -126,7 +126,7 @@ subroutine ephoto
     close(1)
 
     filepath = trim(data_dir)//'ephoto_xo2.dat'
-    open(unit=1,file=filepath,status='old',readonly)
+    open(unit=1,file=filepath,status='old',action='read')
     read(1,*)
     read(1,*)
     read(1,*)
@@ -137,7 +137,7 @@ subroutine ephoto
     close(1)
 
     filepath = trim(data_dir)//'ephoto_xo.dat'
-    open(unit=1,file=filepath,status='old',readonly)
+    open(unit=1,file=filepath,status='old',action='read')
     read(1,*)
     read(1,*)
     read(1,*)

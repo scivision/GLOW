@@ -50,6 +50,8 @@ module cglow
   implicit none
   save
 
+  real, parameter :: pi = atan(1.)*4.
+
 ! Array dimensions, configurable:
 
   integer :: jmax                ! number of vertical levels
@@ -187,6 +189,24 @@ module cglow
        gamb(nei,nmaj))
 
   end subroutine cglow_init
+
+
+  Elemental Real Function sind(ang)
+  ! this is a non-standard function so include it explicity for cross-platform compatibility
+  real, intent(in) :: ang
+
+  sind = sin(ang*pi/180.)
+
+  End Function sind
+
+
+  Elemental Real Function cosd(ang)
+  ! this is a non-standard function so include it explicity for cross-platform compatibility
+  real, intent(in) :: ang
+
+  cosd = cos(ang*pi/180.)
+
+  End Function cosd
 
 !-----------------------------------------------------------------------
 

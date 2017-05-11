@@ -46,7 +46,9 @@
       write(lun,"(4f8.2)") f107,f107p,f107a,xuvfac
       write(lun,"(' Eflux  ',' Ezero  ',' Itail  ',' FracO  ',' FracO2  ',' FracN2  ')")
       write(lun,"(f8.2,f8.1,i8,3f8.2)") ef, ez, itail, fraco, fraco2, fracn2
-      write(lun,"(' Alt    Tn    Ti    Te      O        O2       N2       He       N        Ne       O+      1356     1304     1027      989     LBH')")
+      write(lun,"(' Alt    Tn    Ti    Te      O        O2       N2     &
+      He       N        Ne       O+      1356     1304     1027      989&
+      LBH')")
 
       do j=1,jmax
         write(lun,"(0p,f6.1,3f6.0,1p,12e9.2)") &
