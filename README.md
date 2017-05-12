@@ -34,9 +34,8 @@ This creates:
 
 executable  |  description
 ------------|--------------
-basic        |   basic GLOW example
-
-If MPI libraries are found by CMake, `basic` will be MPI compiled.
+basic        |   basic GLOW 
+driver  | MPI/NetCDF GLOW 
 
 ### MPI Prereq
 Allows parallel execution of GLOW Fortran code for HPCC.
