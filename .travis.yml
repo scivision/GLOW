@@ -7,7 +7,7 @@ python:
 dist: trusty
 
 os:
-  - osx
+#  - osx
   - linux
 
 notifications:
