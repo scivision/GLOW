@@ -425,7 +425,7 @@ program glowdriver
 ! Create and define a new netCDF output file for each time (root task only):
 !
   if (itask == 0) then 
-    write (ifile,"('.',i3.3,'.nc')"),itime
+    write (ifile,"('.',i3.3,'.nc')") itime
     glow_ncfileit = trim(glow_ncfile) // ifile
     call create_ncfile(glow_ncfileit,tgcm_ncfile)
     call write_ncfile(glow_ncfileit)

@@ -171,7 +171,7 @@ subroutine tzgrid(i,l,jmax,z,zo,zo2,zn2,zns,znd,zno,ztn,zun,zvn,ze,zti,zte)
         endif
     enddo 
     z(jmax) = z(jmax-1) + (z(jmax-1)-z(jmax-2))     !patch top level
-    ze(jmax) = ze(jmax-1)**2 / + ze(jmax-2)
+    ze(jmax) = ze(jmax-1)**2 / (+ ze(jmax-2))
   endif
 
   if (nlev == 97) then                              ! high-res TIME-GCM
