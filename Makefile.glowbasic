@@ -1,5 +1,5 @@
 #
-FC = ifort
+#FC = ifort
 
  FFLAGS = -O3
 #FFLAGS = -g $(DBGFLAGS)

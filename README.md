@@ -47,3 +47,8 @@ Allows parallel execution of GLOW Fortran code for HPCC.
 allows writing data in NetCDF (optional).
 
     sudo apt install libnetcdf-dev
+
+### Select Fortran compiler
+Simply use the variable `FC`. Example
+
+    FC=ifort make
