@@ -40,6 +40,33 @@ executable  |  description
 basic        |   basic GLOW 
 driver  | MPI/NetCDF GLOW 
 
+### Fortran examples
+With regard to precision, at first try I occasionally see the least digit of precision in the text output files differ. 
+This can be related to Stan using Intel Fortran compiler and I'm using Gfortran.
+E.g. I get 4.34e-9 and Stan got 4.33e-9.
+
+I also get the message::
+
+    Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+    
+Which is a warning sign that different compilers and platforms may yield different results of unpredictable variance.
+
+
+
+#### Aurora example (night)
+Compare your results vs. Stan's results with `meld`:
+
+    ./basic < in.basic.aur > aur.basic.out
+
+    meld out.basic.aur aur.basic.out
+
+
+### Aurora Example (night)
+
+    ./basic < in.basic.day > day.basic.out
+
+    meld out.basic.day day.basic.out
+
 ### MPI Prereq
 Allows parallel execution of GLOW Fortran code for HPCC.
 

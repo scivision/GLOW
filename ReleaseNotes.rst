@@ -3,6 +3,8 @@ GLOW version 0.98 release notes
 :author: Stan Solomon
 :date:   3/2017
 
+.. contents::
+
 See Quickstart.txt for very basic instructions
 See Glow.txt for more details
 See Glowlicense.txt for the Open Source Academic Research License Agreement
