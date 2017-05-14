@@ -61,7 +61,7 @@ Compare your results vs. Stan's results with `meld`:
     meld out.basic.aur aur.basic.out
 
 
-### Aurora Example (night)
+#### Aurora Example (night)
 
     ./basic < in.basic.day > day.basic.out
 
@@ -73,11 +73,16 @@ Allows parallel execution of GLOW Fortran code for HPCC.
     sudo apt install libopenmpi-dev
     
 ### NetCDF prereq
-allows writing data in NetCDF (optional).
+allows reading/writing data in NetCDF (optional). 
+You need both of these.
 
-    sudo apt install libnetcdf-dev
+    sudo apt install libnetcdf-dev libnetcdff-dev
 
 ### Select Fortran compiler
 Simply use the variable `FC`. Example
 
-    FC=ifort make
+    cd build/
+    rm -r *
+    
+    FC=ifort cmake ..
+    make
