@@ -4,12 +4,15 @@
 The GLobal airglOW Model
 
 This directory contains:
-   Fortran-90 source code files,
-   Makefiles,
-   Example input and output files,
-   Example job script,
-   Subdirectory data/ contains input data files,
-   Subdirectory data/iri90 contains IRI input data files
+
+   * Modern Fortran source code files,
+   * Makefile
+   * CMakeLists.txt
+   * Example input and output files
+   * Example job script
+   * `data/` contains input data files,
+   * `data/iri90/` contains IRI input data files
+   * [Release Notes](ReleaseNotes.rst)
 
 
 ## Python install
