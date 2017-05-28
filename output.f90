@@ -14,7 +14,7 @@ module output
 ! any routines in this module are called. They are currently
 ! set by the main driver (glowdriver.f90) and module cglow.f90.
 
-
+  use iso_fortran_env, only: error_unit
   use netcdf
 
   use cglow,only: nbins,lmax,nmaj,nei,nex,nw,nc,nst
@@ -110,10 +110,10 @@ module output
 
   istat = nf90_create(ncfile,NF90_CLOBBER,ncid) 
   if (istat /= NF90_NOERR) then
-    write(6,"('>>> Error creating netcdf output file ',a)") trim(ncfile)
+    write(error_unit,"('>>> Error creating netcdf output file ',a)") trim(ncfile)
     call handle_ncerr(istat,'Error from nf90_create',1)
   endif
-  write(6,"('Created netcdf dataset ',a)") trim(ncfile)
+  write(error_unit,"('Created netcdf dataset ',a)") trim(ncfile)
 !
 ! Define dimensions:
 !
@@ -326,7 +326,7 @@ module output
 
   istat = nf90_open(ncfile,NF90_WRITE,ncid)
   if (istat /= NF90_NOERR) then
-    write(6,"('>>> Error opening file for writing: ncfile=',a)") trim(ncfile)
+    write(error_unit,"('>>> Error opening file for writing: ncfile=',a)") trim(ncfile)
     call handle_ncerr(istat,'Error from nf90_open',1)
   endif
 
@@ -397,9 +397,9 @@ module output
       curtime = ' '
       call date_and_time(date,time,zone,values)
 !
-!     write(6,"('datetime: date=',a,' time=',a,' zone=',a)")
+!     write(error_unit,"('datetime: date=',a,' time=',a,' zone=',a)")
 !    |  date,time,zone
-!     write(6,"('datetime: values=',8i8)") values
+!     write(error_unit,"('datetime: values=',8i8)") values
 !
       curdate(1:2) = date(5:6)
       curdate(3:3) = '/'
@@ -424,13 +424,14 @@ module output
     integer,intent(in) :: istat,ifatal
     character(len=*),intent(in) :: msg
 !
-    write(6,"(/72('-'))")
-    write(6,"('>>> Error from netcdf library:')")
-    write(6,"(a)") trim(msg)
-    write(6,"('istat=',i5)") istat
-    write(6,"(a)") nf90_strerror(istat)
-    write(6,"(72('-')/)")
-    if (ifatal > 0) stop('Fatal netcdf error')
+    write(error_unit, "(/72('-'))")
+    write(error_unit, "('>>> Error from netcdf library:')")
+    write(error_unit, "(a)") trim(msg)
+    write(error_unit, "('istat=',i5)") istat
+    write(error_unit, "(a)") nf90_strerror(istat)
+    write(error_unit, "(72('-')/)")
+    if (ifatal > 0) error stop 'Fatal netcdf error'
+
   end subroutine handle_ncerr
 
 !-----------------------------------------------------------------------
