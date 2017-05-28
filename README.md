@@ -87,4 +87,4 @@ Simply use the variable `FC`. Example
     FC=ifort cmake ..
     make
 
-NOTE: Using the Intel compiler required that you have [built NetCDF using Intel Fortran](https://software.intel.com/en-us/articles/performance-tools-for-software-developers-building-netcdf-with-the-intel-compilers/)--this is an issue ANYTIME you use the Intel Compiler and NetCDF.
+NOTE: Using the Intel compiler requires that you have [built NetCDF using Intel Fortran](https://software.intel.com/en-us/articles/performance-tools-for-software-developers-building-netcdf-with-the-intel-compilers/)--this is an issue ANYTIME you use the Intel Compiler and NetCDF.
