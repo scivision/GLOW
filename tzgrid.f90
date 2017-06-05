@@ -35,6 +35,7 @@
 
 subroutine tzgrid(i,l,jmax,z,zo,zo2,zn2,zns,znd,zno,ztn,zun,zvn,ze,zti,zte)
 
+  use, intrinsic:: iso_fortran_env,only: error_unit
   use readtgcm,only: nlev,zg,tn,un,vn,o2,o1,n2,n4s,n2d,no,ti,te,ne
 
   implicit none
@@ -45,8 +46,8 @@ subroutine tzgrid(i,l,jmax,z,zo,zo2,zn2,zns,znd,zno,ztn,zun,zvn,ze,zti,zte)
   integer :: j,jj
 
   if (nlev/=29 .and. nlev/=57 .and. nlev/=49 .and. nlev/=97) then
-    write(6,"('zgrid: unknown NLEV = ',i5)") nlev
-    stop 'zgrid'
+    write(error_unit,"('zgrid: unknown NLEV = ',i5)") nlev
+    error stop 'zgrid'
   endif
 
   if (nlev == 29) then                              ! low-res TIE-GCM

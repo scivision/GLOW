@@ -14,7 +14,7 @@ module output
 ! any routines in this module are called. They are currently
 ! set by the main driver (glowdriver.f90) and module cglow.f90.
 
-  use iso_fortran_env, only: error_unit
+  use, intrinsic :: iso_fortran_env, only: error_unit
   use netcdf
 
   use cglow,only: nbins,lmax,nmaj,nei,nex,nw,nc,nst

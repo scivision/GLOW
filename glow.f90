@@ -220,6 +220,4 @@
 
       call bands
 
-      return
-
     end subroutine glow
