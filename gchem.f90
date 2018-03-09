@@ -347,8 +347,7 @@
     IF (KCHEM >= 4) THEN
       DO I=JMAX,1,-1
         IF (ZZ(I) > 2.0001E7) then
-            J200=I-1
-            exit
+          J200=I-1   ! don't exit, let it find the last one down.
         endif
       ENDDO
     ENDIF
