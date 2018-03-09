@@ -38,24 +38,22 @@
  
 ! Get zonal mean no profiles:
  
-      iday=idate-idate/1000*1000
-      xkp=1.75*alog(0.4*ap)
+      iday=modulo(idate,1000)
+      xkp=1.75*log(0.4*ap)
       if (xkp < 0.0) xkp=0.0
       call snoem(iday,xkp,f107,zg,xmlatno,zmno)
  
 ! Interpolate altitude profile at magnetic latitude:
  
-      klat1=ifix(xmlat+80.)/5+1
+      klat1=int(xmlat+80.)/5+1
       klat2=klat1+1
       if (klat1 < 1) klat1=1
       if (klat1 > 33) klat1=33
       if (klat2 < 1) klat1=1
       if (klat2 > 33) klat2=33
-      rat=xmlat/5.-ifix(xmlat)/5
+      rat=xmlat/5.-int(xmlat)/5
 
-      do j=1,16
-        zmnoi(j) = alog(zmno(klat1,j)*(1.-rat)+zmno(klat2,j)*rat)
-      end do
+      zmnoi(:) = log(zmno(klat1,:)*(1.-rat)+zmno(klat2,:)*rat)
 
 ! Interpolate onto altitude grid:
 ! Use constant value below 100 km and scale height assumption above 150 km:
@@ -64,13 +62,11 @@
       do j=1,jmax
         if (z(j) <= 100.) zno(j)=exp(zmnoi(16))
         if (z(j) > 100. .and. z(j) <= 150.) then
-          kz2=ifix((150.-z(j))*.3)+1
+          kz2= int((150.-z(j))*.3)+1
           kz1=kz2+1
           zno(j)=exp(zmnoi(kz1) + (zmnoi(kz2)-zmnoi(kz1)) * (z(j)-zg(kz1)) / (zg(kz2)-zg(kz1)))
         endif
         if (z(j) > 150.) zno(j)=exp(zmnoi(1)+(150.-z(j))/h)
       end do
 
-      return
-
-    end
+    end subroutine snoemint

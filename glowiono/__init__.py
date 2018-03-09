@@ -5,6 +5,7 @@ code wrapping in Python by Michael Hirsch
 """
 from pathlib import Path
 import logging
+from itertools import chain
 from datetime import datetime
 import xarray
 import numpy as np
@@ -26,7 +27,7 @@ def runglowaurora(params:dict, z_km:np.ndarray=None) -> xarray.Dataset:
     """ Runs Fortran GLOW program and collects results in friendly arrays with metadata. """
     #%% (-2) check/process user inputs
     assert isinstance(params['flux'],(float,int,np.ndarray))
-    assert isinstance(params['E0'],   (float,'float32',int))
+    assert isinstance(params['E0'],   (float,int))
     assert isinstance(params['t0'],   (datetime,str))
     assert isinstance(params['glat'], (float,int))
     assert isinstance(params['glon'], (float,int))
@@ -44,6 +45,14 @@ def runglowaurora(params:dict, z_km:np.ndarray=None) -> xarray.Dataset:
 
     yeardoy,utsec = datetime2yd(params['t0'])[:2]
 #%% (0) define altitude grid [km]
+
+#FIXME: dynamic grid
+    z_km = np.array(list(range(80,110,1)) +
+            [110.,111.5, 113.,114.5] +
+           list(range(116,136,2)) +
+           [137., 140., 144., 148., 153., 158., 164., 170]+
+           list(chain(range(176,204,7),range(205,253,8),range(254,299,9),range(300,650,10))))
+
     if z_km is None:
         if glowalt is not None:
             z_km = glowalt()
@@ -67,64 +76,62 @@ def runglowaurora(params:dict, z_km:np.ndarray=None) -> xarray.Dataset:
     phi = np.stack((ener,dE,phitop), 1)   # Nalt x 3
     assert phi.shape[1] == 3
 #%% (2) msis,iri,glow model
-    ion,ecalc,photI,ImpI,isr,prate,lrate,UV = glowfort.aurora(z_km,yeardoy,utsec,params['glat'],params['glon']%360,
-                                                              params['f107a'],params['f107'],params['f107p'],params['Ap'],phi)
-
+    zeta = glowfort.glowbasic(yeardoy,utsec,params['glat'],params['glon']%360,
+                              params['f107a'],params['f107'],params['f107p'],params['Ap'],
+                              z_km,pynw=15,pyphi=phi,pyverbose=False,)
 #%% (3) collect outputs
-    zeta=glowfort.cglow.zeta.T #columns 11:20 are identically zero
 
-    lamb=[3371., 4278., 5200., 5577., 6300., 7320., 10400., 3466., 7774., 8446., 3726.,
-          1356., 1304., 1027., 989., 1900.]
+    lamb=[3371, 4278, 5200, 5577, 6300, 7320, 10400, 3466, 7774, 8446, 3726,
+          'LBH', 1356,1493,1304]
     products=['nO+(2P)','nO+(2D)','nO+(4S)','nN+','nN2+','nO2+','nNO+','nO','nO2','nN2','nNO']
 
     sim = xarray.Dataset()
 
-    sim['ver'] = xarray.DataArray(
-                   np.concatenate((zeta[:,:11],UV.T), axis=1),
-                   dims=['z_km','wavelength_nm'],
-                    coords={'z_km':z_km, 'wavelength_nm':lamb})
+    sim['ver'] = xarray.DataArray(zeta.T,
+                        dims=['z_km','wavelength_nm'],
+                        coords={'z_km':z_km, 'wavelength_nm':lamb})
 
-    sim['photIon'] = xarray.DataArray(np.hstack((photI[:,None],ImpI[:,None],ecalc[:,None],ion)),
-                               dims=['z_km','type'],
-                               coords={'z_km':z_km,
-                                'type':['photoIoniz','eImpactIoniz','ne']+products})
-
-    sim['isr'] = xarray.DataArray(isr,
-                          dims=['z_km','param'],
-                          coords={'z_km':z_km,'param':['ne','Te','Ti']})
-
-    sim['phitop'] = xarray.DataArray(phi[:,2],
-                           dims=['eV'],
-                           coords={'eV':phi[:,0]})
-
+#    sim['photIon'] = xarray.DataArray(np.hstack((photI[:,None],ImpI[:,None],ecalc[:,None],ion)),
+#                               dims=['z_km','type'],
+#                               coords={'z_km':z_km,
+#                                'type':['photoIoniz','eImpactIoniz','ne']+products})
+#
+#    sim['isr'] = xarray.DataArray(isr,
+#                          dims=['z_km','param'],
+#                          coords={'z_km':z_km,'param':['ne','Te','Ti']})
+#
+#    sim['phitop'] = xarray.DataArray(phi[:,2],
+#                           dims=['eV'],
+#                           coords={'eV':phi[:,0]})
+#
     sim.attrs['sza'] = np.degrees(glowfort.cglow.sza)
-
-    sim['tez'] = xarray.DataArray(glowfort.cglow.tez,
-                           dims=['z_km'], coords={'z_km':z_km})
+#
+#    sim['tez'] = xarray.DataArray(glowfort.cglow.tez,
+#                           dims=['z_km'], coords={'z_km':z_km})
 
 
 #%% production and loss rates
-    prate = prate.T; lrate=lrate.T #fortran to C ordering 2x170x20, only first 12 columns are used
-
-    #column labels by inspection of fortran/gchem.f staring after "DO 150 I=1,JMAX" (thanks Stan!)
-    sim['prates'] = xarray.DataArray(prate[1,:,:12], #columns 12:20 are identically zero
-                      dims=['z_km','reaction'],
-                      coords={'z_km':z_km,
-                              'reaction':['O+(2P)','O+(2D)','O+(4S)','N+','N2+','O2+','NO+',
-                                 'N2(A)','N(2P)','N(2D)','O(1S)','O(1D)']}
-                    )
-
-    sim['lrates'] = xarray.DataArray(lrate[1,:,:12], #columns 12:20 are identically zero
-                      dims=['z_km','reaction'],
-                      coords={'z_km':z_km,
-                        'reaction':['O+(2P)','O+(2D)','O+(4S)','N+','N2+','O2+','NO+',
-                                 'N2(A)','N(2P)','N(2D)','O(1S)','O(1D)']}
-                    )
-
-    sim['sion'] = xarray.DataArray(glowfort.cglow.sion,
-                         dims=['gas','z_km'],
-                         coords={'gas':['O','O2','N2'],
-                                 'z_km':z_km})
+#    prate = prate.T; lrate=lrate.T #fortran to C ordering 2x170x20, only first 12 columns are used
+#
+#    #column labels by inspection of fortran/gchem.f staring after "DO 150 I=1,JMAX" (thanks Stan!)
+#    sim['prates'] = xarray.DataArray(prate[1,:,:12], #columns 12:20 are identically zero
+#                      dims=['z_km','reaction'],
+#                      coords={'z_km':z_km,
+#                              'reaction':['O+(2P)','O+(2D)','O+(4S)','N+','N2+','O2+','NO+',
+#                                 'N2(A)','N(2P)','N(2D)','O(1S)','O(1D)']}
+#                    )
+#
+#    sim['lrates'] = xarray.DataArray(lrate[1,:,:12], #columns 12:20 are identically zero
+#                      dims=['z_km','reaction'],
+#                      coords={'z_km':z_km,
+#                        'reaction':['O+(2P)','O+(2D)','O+(4S)','N+','N2+','O2+','NO+',
+#                                 'N2(A)','N(2P)','N(2D)','O(1S)','O(1D)']}
+#                    )
+#
+#    sim['sion'] = xarray.DataArray(glowfort.cglow.sion,
+#                         dims=['gas','z_km'],
+#                         coords={'gas':['O','O2','N2'],
+#                                 'z_km':z_km})
 
     return sim
 

@@ -40,17 +40,17 @@
 !         zte    Te, K
 !         zxden  Array of ionized/excited species density, cm-3, must be dimensioned (nex,jmax)
 
-subroutine mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_dir, &
-                   z,zo,zo2,zn2,zns,znd,zno,ztn,zun,zvn,ze,zti,zte,zxden)
+subroutine mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_dir, z, &
+                   zo,zo2,zn2,zns,znd,zno,ztn,zun,zvn,ze,zti,zte,zxden)
                    
   use, intrinsic:: iso_fortran_env, only: error_unit
 
   implicit none
 
   integer,intent(in) :: jmax,nex,idate
-  real,intent(in) :: ut,glat,glong,stl,f107a,f107,f107p,ap
+  real,intent(in) :: ut,glat,glong,stl,f107a,f107,f107p,ap,z(jmax)
   character(*),intent(in) :: iri90_dir
-  real,intent(out) :: z(jmax),zo(jmax),zo2(jmax),zn2(jmax),zns(jmax),znd(jmax), &
+  real,intent(out) :: zo(jmax),zo2(jmax),zn2(jmax),zns(jmax),znd(jmax), &
        zno(jmax),ztn(jmax),zti(jmax),zte(jmax),zun(jmax),zvn(jmax),ze(jmax),zxden(nex,jmax)
 
   integer :: j,jmag,iday,mmdd
@@ -69,17 +69,17 @@ subroutine mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_di
 !
 ! Set default altitudes:
 !
-  z = (/  80.,  81.,  82.,  83.,  84.,  85.,  86.,  87.,  88.,  89., &
-          90.,  91.,  92.,  93.,  94.,  95.,  96.,  97.,  98.,  99., &
-         100., 101., 102., 103., 104., 105., 106., 107., 108., 109., &    
-         110.,111.5, 113.,114.5, 116., 118., 120., 122., 124., 126., &
-         128., 130., 132., 134., 137., 140., 144., 148., 153., 158., &
-         164., 170., 176., 183., 190., 197., 205., 213., 221., 229., &
-         237., 245., 254., 263., 272., 281., 290., 300., 310., 320., &
-         330., 340., 350., 360., 370., 380., 390., 400., 410., 420., &
-         430., 440., 450., 460., 470., 480., 490., 500., 510., 520., &
-         530., 540., 550., 560., 570., 580., 590., 600., 610., 620., &
-         630., 640. /)
+!  z = (/  80.,  81.,  82.,  83.,  84.,  85.,  86.,  87.,  88.,  89., &
+!          90.,  91.,  92.,  93.,  94.,  95.,  96.,  97.,  98.,  99., &
+!         100., 101., 102., 103., 104., 105., 106., 107., 108., 109., &    
+!         110.,111.5, 113.,114.5, 116., 118., 120., 122., 124., 126., &
+!         128., 130., 132., 134., 137., 140., 144., 148., 153., 158., &
+!         164., 170., 176., 183., 190., 197., 205., 213., 221., 229., &
+!         237., 245., 254., 263., 272., 281., 290., 300., 310., 320., &
+!         330., 340., 350., 360., 370., 380., 390., 400., 410., 420., &
+!         430., 440., 450., 460., 470., 480., 490., 500., 510., 520., &
+!         530., 540., 550., 560., 570., 580., 590., 600., 610., 620., &
+!         630., 640. /)
 !
 ! Call MSIS-2K to get neutral densities and temperature:
 !
@@ -108,7 +108,7 @@ subroutine mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_di
         jf(5) = .false.
         jmag = 0
         rz12 = -f107a
-        iday = idate - idate/1000*1000
+        iday = modulo(idate,1000)
         mmdd = -iday
         outf = 0.
         

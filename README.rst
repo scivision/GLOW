@@ -35,7 +35,7 @@ While many users use the Python interface to Glow, users on HPCC may
 want to use MPI directly in Fortran using the Makefiles or CMake. 
 Here's how to compile the ``basic`` example with CMake::
 
-    cd build
+    cd bin
     cmake ..
     make
     cd ..
@@ -78,7 +78,7 @@ Compare your results vs. Stan's results:: with ``meld``::
 
     meld reference/aur981.basic.out <(./basic < in.basic.aur)
 
-Aurora Example (night)
+Dayglow Example (day)
 ^^^^^^^^^^^^^^^^^^^^^^
 
 ::
@@ -109,7 +109,7 @@ Select Fortran compiler
 
 Simply use the variable ``FC``::
 
-    cd build/
+    cd bin/
     rm -r *
 
     FC=ifort cmake ..

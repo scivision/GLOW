@@ -1,4 +1,5 @@
-subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyef,pyec)
+subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyz,Nz,pynw,pynbins,pyphi,pyverbose, &
+            pyzeta)
 
 ! This software is part of the GLOW model.  Use is governed by the Open Source
 ! Academic Research License Agreement contained in the file glowlicense.txt.
@@ -33,16 +34,19 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pye
 
   use, intrinsic:: iso_fortran_env, only: output_unit
 
-  use cglow,only: jmax,nbins,nex, idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec, &
+  use cglow,only: jmax,nbins,nex, idate,ut,glat,glong,f107a,f107,f107p,ap, &
     iscale,jlocal,kchem,xuvfac,  zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte, &
-    ener,del,phitop,tir,&
+    ener,del,phitop,tir,nw,verbose,&
     ecalc,zxden,zeta, cglow_init, data_dir
 
   implicit none
   
   
-  integer, intent(in) :: pyidate
-  real, intent(in) ::pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyef,pyec
+  integer, intent(in) :: pyidate,Nz,pynw,pynbins
+  real, intent(in) ::pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyz(Nz),pyphi(pynbins,3)
+  logical, intent(in) :: pyverbose
+  real, intent(out) ::  pyzeta(pynw,Nz)
+  
 
   character(*), parameter :: iri90_dir = 'data/iri90/'
 
@@ -54,10 +58,12 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pye
   integer :: j,ii,itail
   
   data_dir    = 'data/'
+  Jmax = Nz
   
-  idate=pyidate; ut=pyut; glat=pyglat; glong=pyglong;
-  f107a=pyf107a; f107=pyf107; f107p=pyf107p; ap=pyap; ef=pyef; ec=pyec
-
+  if (nz/=jmax.or.nw/=pynw.or.pynbins/=nbins) then
+    print*,'Nz,jmax',nz,jmax,'nw,pynw',nw,pynw,'pynbins,nbins',pynbins,nbins
+    error stop 'python dimension mismatch'
+  endif
 
 ! Initialize standard switches:
 
@@ -69,9 +75,6 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pye
   fmono=0.
   emono=0.
 
-! Set number of altitude levels:
-  jmax = 102
-
 ! Allocate local arrays:
   allocate(z(jmax))
   allocate(zun(jmax))
@@ -79,15 +82,18 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pye
   allocate(pedcond(jmax))
   allocate(hallcond(jmax))
   allocate(outf(11,jmax))
+  
+! transfer data from Python
+   idate=pyidate; ut=pyut; glat=pyglat; glong=pyglong;
+  f107a=pyf107a; f107=pyf107; f107p=pyf107p; ap=pyap; verbose = pyverbose
 
 ! Call CGLOW_INIT (module CGLOW) to set array dimensions and allocate use-associated variables:
 ! (This was formerly done using common blocks, including common block /cglow/.)
 !
   call cglow_init
-!
-! Call EGRID to set up electron energy grid:
-!
-  call egrid (ener, del)
+  
+  z = pyz
+  ener = pyphi(:,1); del = pyphi(:,2); phitop = pyphi(:,3)
 
 ! Calculate local solar time:
 !
@@ -97,13 +103,13 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pye
 !
 ! Call MZGRID to use MSIS/NOEM/IRI inputs on default altitude grid:
 
-    call mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_dir, &
-                 z,zo,zo2,zn2,zns,znd,zno,ztn,zun,zvn,ze,zti,zte,zxden)
+    call mzgrid(jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_dir, z,&
+                 zo,zo2,zn2,zns,znd,zno,ztn,zun,zvn,ze,zti,zte,zxden)
 !
 ! Call MAXT to put auroral electron flux specified by namelist input into phitop array:
 !
-    phitop(:) = 0.
-    if (ef>.001 .and. ec>1.) call maxt (ef,ec,ener,del,nbins,itail,fmono,emono,phitop)
+!    phitop(:) = 0.
+ !   if (ef>.001 .and. ec>1.) call maxt (ef,ec,ener,del,nbins,itail,fmono,emono,phitop)
 !
 ! Fill altitude array, converting to cm:
 !
@@ -121,16 +127,19 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pye
                     zxden(3,j), zxden(6,j), zxden(7,j), ztn(j), zti(j), zte(j), &
                     pedcond(j), hallcond(j))
     enddo
+    
+! transfer data to Python 
+  pyzeta=zeta
 
 ! Output section:
-
-    write(output_unit,"('   Z     Tn       O        N2        NO      Ne(in)      "//&
+    if (verbose) then
+      write(output_unit,"('   Z     Tn       O        N2        NO      Ne(in)      "//&
              "Ne(out)  Ionrate      O+       O2+      NO+       N(2D)    Pederson   Hall')")
-    write(output_unit,"(1x,0p,f5.1,f6.0,1p,12e10.2)") (z(j),ztn(j),zo(j),zn2(j),zno(j),ze(j), &
-      ecalc(j),tir(j),zxden(3,j),zxden(6,j),zxden(7,j),zxden(10,j),pedcond(j),hallcond(j),j=1,jmax)
-    write(output_unit,"('   Z      3371    4278    5200    5577    6300    7320   "//&
+      write(output_unit,"(1x,0p,f5.1,f6.0,1p,12e10.2)") (z(j),ztn(j),zo(j),zn2(j),zno(j),ze(j), &
+        ecalc(j),tir(j),zxden(3,j),zxden(6,j),zxden(7,j),zxden(10,j),pedcond(j),hallcond(j),j=1,jmax)
+      write(output_unit,"('   Z      3371    4278    5200    5577    6300    7320   "//&
              "10400    3644    7774    8446    3726    LBH     1356    1493    1304')")
-    write(output_unit,"(1x,f5.1,15f8.2)")(z(j),(zeta(ii,j),ii=1,15),j=1,jmax)
-
+      write(output_unit,"(1x,f5.1,15f8.2)")(z(j),(zeta(ii,j),ii=1,15),j=1,jmax)
+    endif
 
 end subroutine glowbasic

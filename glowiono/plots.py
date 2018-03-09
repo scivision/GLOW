@@ -56,37 +56,45 @@ def _plotisr(params,sim,st:str):
     writeplots(fg,'bg_',params)
 
 def _plotver(sim,params,supertitle):
-    if not 'phitop' in sim:
+    N = 0
+    if 'phitop' in sim:
+        N +=1
+    if 'ver' in sim:
+        N +=2
+    if not N:
         return
 
     fg = figure(figsize=(15,8))
-    axs = fg.subplots(1,3,sharey=False)
+    axs = fg.subplots(1, N, sharey=False)
     fg.suptitle(supertitle)
     fg.tight_layout(pad=3.2, w_pad=0.6)
 
 #%% incident flux at top of ionosphere
-    ax = axs[0]
-    ax.plot(sim['phitop'].eV, sim['phitop'], marker='.')
+    if 'phitop' in sim:
+        N-=1
+        ax = axs[N]
+        ax.plot(sim['phitop'].eV, sim['phitop'], marker='.')
 
-    titxt=f'Total Incident Flux={params["flux"]:.1f},'
-    ax.set_title(titxt)
+        titxt=f'Total Incident Flux={params["flux"]:.1f},'
+        ax.set_title(titxt)
 
-    ax.set_xlabel('Beam Energy [eV]')
-    ax.set_ylabel('Flux [erg sr$^{-1}$ s$^{-1}$]')
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_ylim(1e-4,1e6)
-    ax.grid(True)
+        ax.set_xlabel('Beam Energy [eV]')
+        ax.set_ylabel('Flux [erg sr$^{-1}$ s$^{-1}$]')
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(1e-4,1e6)
+        ax.grid(True)
 # %% ver visible
     if not 'ver' in sim:
         return
 
-    ind= [4278, 5200, 5577, 6300]
-    ax = axs[1]
+    ind= ['4278', '5200', '5577', '6300']
+    N-=1
+    ax = axs[N]
     ax.plot(sim['ver'].loc[...,ind],
             sim.z_km)
     ax.set_xlabel('Volume Emission Rate')
-    ax.set_ylabel('altitude [km]')
+
     _nicez(ax,params)
     ax.set_xscale('log')
     if not 'eig' in params['makeplot']:
@@ -94,8 +102,10 @@ def _plotver(sim,params,supertitle):
     ax.legend(ind,loc='best')
     ax.set_title('Volume Emission Rate: Visible')
 #%% ver invisible
-    ind = [3371,7320,10400,3466,7774, 8446,3726,1356., 1304., 1027., 989., 1900.]
-    ax = axs[2]
+    ind = ['3371','7320','10400','3466','7774', '8446','3726','1356',
+           'LBH','1493','1304']
+    N-=1
+    ax = axs[N]
     ax.plot(sim['ver'].loc[...,ind],
             sim.z_km)
     ax.set_xlabel('Volume Emission Rate')
@@ -105,6 +115,7 @@ def _plotver(sim,params,supertitle):
         ax.set_xlim(1e-5,1e3)
     ax.legend(ind,loc='best')
     ax.set_title('Volume Emission Rate: IR & UV')
+    ax.set_ylabel('altitude [km]')
 
     writeplots(fg,'ver_',params)
 
@@ -184,7 +195,7 @@ def plotaurora(params:dict, sim:xarray.Dataset):
     if not 'eig' in makeplot:
         _plotisr(params,sim,supertitle)
 #%% production and loss rates for species
-    plotprodloss(sim['prates'], sim['lrates'], params, supertitle)
+    plotprodloss(sim, params, supertitle)
 #%% volume emission rate
     _plotver(sim,params,supertitle)
 # %% Ne, Ni
@@ -192,7 +203,7 @@ def plotaurora(params:dict, sim:xarray.Dataset):
         _plotdens(sim,params,supertitle)
 # %% total energy deposition vs. altitude
     if not 'eig' in makeplot:
-        plotenerdep(sim['tez'],params,titlend)
+        plotenerdep(sim,params,titlend)
 #% % e^- impact ionization rates from ETRANS
         _plotioniz(sim,params,supertitle)
 #%% constituants of per-wavelength VER
@@ -221,12 +232,15 @@ def _plotconstit(sim,params,supertitle):
     writeplots(fg,'constit_',params)
 
 
-def plotenerdep(tez,params,titlend=''):
+def plotenerdep(sim, params:dict,titlend=''):
     """ plot energy deposition vs. altitude """
+    if 'tez' not in sim:
+        return
+
     fg= figure()
     ax = fg.gca()
 
-    tez = tez.squeeze()
+    tez = sim['tez'].squeeze()
 
     if tez.ndim==1:
         ax.plot(tez, tez.z_km)
@@ -244,14 +258,16 @@ def plotenerdep(tez,params,titlend=''):
     ax.set_ylabel('altitude [km]')
 
 
-def plotprodloss(prod,loss,params,st):
+def plotprodloss(sim,params,st):
     """ plot production/loss vs. alttiude """
+    if 'prates' not in sim:
+        return
 
     fg = figure(figsize=(15,8))
     ax = fg.subplots(1,2,sharey=True)
     fg.suptitle(f' Volume Production/Loss Rates   {st}')
 
-    for a,R,title in zip(ax,[prod,loss],('Production','Loss')):
+    for a,R,title in zip(ax,(sim['prates'],sim['lrates']),('Production','Loss')):
         if R.ndim==2:
             a.set_title('Volume {title} Rates')
             try:
@@ -269,7 +285,7 @@ def plotprodloss(prod,loss,params,st):
                 logging.warning(f'prodloss plot error    {e}')
         elif R.ndim==3:
             a.set_title('Volume {title} Rates')
-            for a,R in zip(ax,[prod,loss]):
+            for a,R in zip(ax,(sim['prates'],sim['lrates'])):
                 for r in R:
                     for s in r.T:
                         a.plot(s, s.z_km, label=s.reaction.item())

@@ -55,7 +55,8 @@ module cglow
 
 ! Array dimensions, configurable:
 
-  integer :: jmax                ! number of vertical levels
+  integer :: jmax              ! number of vertical levels
+  logical :: verbose=.false.
 
 ! Array dimensions, non-configurable:
 
@@ -73,7 +74,7 @@ module cglow
   character(1024) :: data_dir
 
   integer :: idate,iscale,jlocal,kchem,ierr
-  real    :: ut,glat,glong,f107,f107a,f107p,ap,ef,ec
+  real    :: ut,glat,glong,f107,f107a,f107p,ap
   real    :: xuvfac, sza, dip, efrac
   real,dimension(nw) :: vcb
 

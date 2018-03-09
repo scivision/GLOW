@@ -33,10 +33,10 @@ program glowdriver
 ! nex     number of ionized/excited species
 ! nw      number of airglow emission wavelengths
 ! nc      number of component production terms for each emission
-
+  use, intrinsic:: iso_fortran_env, only: input_unit,error_unit,output_unit
   use mpi
 
-   use cglow,only: jmax,nbins,nex,nw,nc, idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec, &
+   use cglow,only: jmax,nbins,nex,nw,nc, idate,ut,glat,glong,f107a,f107,f107p,ap, &
     iscale,jlocal,kchem,xuvfac,  zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte, &
     ener,del,phitop,ecalc,zxden,zeta, cglow_init, data_dir,&
     dip, efrac, ierr,sza,zlbh,zceta
@@ -78,7 +78,7 @@ program glowdriver
   real,allocatable :: outf(:,:)       ! iri output (11,jmax)
   real,allocatable :: recbuf(:,:)     ! receive buffer for MPI gather
   real :: utstart,utstep,utstop
-  real :: stl,fmono,emono,kp
+  real :: stl,fmono,emono,kp,ef,ec
   integer nproc,itask,mpierr,lat0,lat1,size2d,size3d,sizeb
   integer :: l,j,i,k,ix,itail
   integer :: nlat_msis, nlon_msis  ! number of lats and lons in grid for MSIS/IRI runs
@@ -116,7 +116,7 @@ program glowdriver
 ! If tgcm history file is not provided, will use namelist inputs for MSIS/IRI/NOEM:
 !
   if (itask == 0) then
-    read (5,nml=glow_input)
+    read(input_unit,nml=glow_input)
     if (len_trim(tgcm_ncfile) > 0) then
       tgcm = .true.
       call read_tgcm_coords(tgcm_ncfile)
@@ -124,7 +124,7 @@ program glowdriver
     else
       tgcm = .false.
       ntimes = ifix((utstop-utstart)/utstep) + 1
-      write(6,"('glow_drv: tgcm_ncfile not provided, will use MSIS/IRI')")
+      write(error_unit,"('glow_drv: tgcm_ncfile not provided, will use MSIS/IRI')")
     endif
   endif
 !
@@ -171,6 +171,17 @@ program glowdriver
     nlev = jmax
     nlat = nlat_msis
     nlon = nlon_msis
+    z = [80.,  81.,  82.,  83.,  84.,  85.,  86.,  87.,  88.,  89., &
+     90.,  91.,  92.,  93.,  94.,  95.,  96.,  97.,  98.,  99., &
+    100., 101., 102., 103., 104., 105., 106., 107., 108., 109., &    
+    110.,111.5, 113.,114.5, 116., 118., 120., 122., 124., 126., &
+    128., 130., 132., 134., 137., 140., 144., 148., 153., 158., &
+    164., 170., 176., 183., 190., 197., 205., 213., 221., 229., &
+    237., 245., 254., 263., 272., 281., 290., 300., 310., 320., &
+    330., 340., 350., 360., 370., 380., 390., 400., 410., 420., &
+    430., 440., 450., 460., 470., 480., 490., 500., 510., 520., &
+    530., 540., 550., 560., 570., 580., 590., 600., 610., 620., &
+    630., 640. ]
   endif
 !
 ! Allocate arrays in other modules (formerly in common blocks):
@@ -199,8 +210,8 @@ program glowdriver
 ! Assign latitude bands to processors:
 !
   if (itask == 0 .and. (nlat/nproc)*nproc /= nlat) then 
-    write(6,"('glow_drv: number of latitudes must be an integer multiple of number of processors')")
-    write(6,"('NLAT =',i3,'   NPROC =',i3)") nlat,nproc
+    write(output_unit,"('glow_drv: number of latitudes must be an integer multiple of number of processors')")
+    write(output_unit,"('NLAT =',i3,'   NPROC =',i3)") nlat,nproc
     stop
   endif
   size2d=nlon*nlat
@@ -244,8 +255,8 @@ program glowdriver
       idate=indate
       ut   =utstart+(itime-1)*utstep
     endif
-    write(6,"('glow_drv: idate=',i7,' ut=',f7.1)") idate,ut
-    write(6,"('glow_drv: F107=',f5.1,' F107a=',f5.1,' F107p=',f5.1,' Ap=',f5.1)")f107,f107a,f107p,ap
+    write(output_unit,"('glow_drv: idate=',i7,' ut=',f7.1)") idate,ut
+    write(output_unit,"('glow_drv: F107=',f5.1,' F107a=',f5.1,' F107p=',f5.1,' Ap=',f5.1)")f107,f107a,f107p,ap
 !
 ! Loop over latitude and longitude to interpolate input fields:
 !
@@ -351,9 +362,9 @@ program glowdriver
 !
 ! Write error code and energy conservation to standard output if it is out of range:
 !
-      if (ierr > 0) write(6,"('glow_drv: IERR = ',i1)") ierr
+      if (ierr > 0) write(error_unit,"('glow_drv: IERR = ',i1)") ierr
       if (abs(efrac) > 0.2) &
-        write(6,"('glow_drv:  EFRAC =',f5.2,'  SZA =',f5.2,'  DIP=',f5.2)") efrac,sza,dip
+        write(output_unit,"('glow_drv:  EFRAC =',f5.2,'  SZA =',f5.2,'  DIP=',f5.2)") efrac,sza,dip
 !
 ! Call CONDUCT to calculate Pederson and Hall conductivities:
 !

@@ -4,6 +4,8 @@ Registration testing of GLOW
 Michael Hirsch
 
 """
+from pathlib import Path
+import os
 import logging
 from datetime import datetime
 from itertools import chain
@@ -16,6 +18,8 @@ import glow
 import glowiono
 #
 msise00=None
+rdir = Path(__file__).parents[1]
+os.chdir(rdir)
 #%% test inputs
 z = list(range(30,110+1,1))
 z += (
@@ -40,6 +44,23 @@ nmaj=3; nst=6
 dtime = datetime(1999,12,21)
 #
 yd,utsec = datetime2yd(dtime)[:2]
+
+
+def test_pythonglow():
+    params = {'t0':'2013-04-14T15:54Z',
+          'glat':65,
+          'glon':-148,
+          'flux':1,
+          'E0':1000,
+          'makeplot':[],
+          'zlim':None,
+          'plotformat':[],
+        }
+
+    sim = glowiono.runglowaurora(params)
+
+    assert_allclose(sim.sza,81.09193)
+    assert_allclose(sim['ver'].loc[120,'5577'], 277.55826)
 
 def test_egrid_maxt():
     ener,dE = glow.egrid()
