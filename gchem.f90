@@ -208,140 +208,138 @@
               T1(JMAX), T2(JMAX), T3(JMAX), T4(JMAX), T5(JMAX), &
               QQ(JMAX), RR(JMAX), SS(JMAX), TT(JMAX), UU(JMAX), &
               VV(JMAX), WW(JMAX), XX(JMAX)
-    real ::   gh,dz,tatomi,alphaef,toti
-    integer :: i,iw,j200,iter
-!
-    DATA A/ 1.07E-5, 0.00585, 0.00185, 0.0450, 1.0600, 9.7E-5, 0.0479, 0.1712, 0.0010, 0.7700, &
-            0.00540, 0.07900,     0.0,    0.0,    0.0,     0.0,   0.0,    0.0,    0.0,    0.0, &
-            30*0.0 /
+    real ::   dz,tatomi(jmax),alphaef(jmax)
+    integer :: i,j200,iter,j
+
     real,parameter :: B(*) = [0.07, 1.20, 0.76, 1.85, 1.00, 0.10, 0.50, 0.81, 0.20, 0.32, &
                               0.48, 0.10, 0.10, 0.10, 0.16, 0.50, 0.30, 0.19, 0.00, 0.10, &
                               0.43, 0.51, 0.10, 0.60, 0.54, 0.44, 0.80, 0.20, 1.00, 0.33, &
                               0.33, 0.34, 0.21, 0.20, 0.10, 0.11, 0.65, 0.20, 0.24, 0.02, &
                               0.18, 0.72, 0.75, 0.10, 0.00, 0.05, 0.02, 0.70, 0.54, 0.00]
-!
-!
-    IF (KCHEM .EQ. 0) RETURN
-!
-!
+
+    A(:) = 0.
+    A(:12) = [1.07E-5, 0.00585, 0.00185, 0.0450, 1.0600, 9.7E-5, 0.0479, 0.1712, 0.0010, 0.7700, &
+              0.00540, 0.07900]
+              
+    IF (KCHEM == 0) RETURN
+
 ! Zero airglow and density arrays:
 !
     zeta(:,:) = 0.
     zceta(:,:,:) = 0.
     vcb(:) = 0.
-    if (kchem .ge. 3) den(:,:) = 0.
+    if (kchem >= 3) den(:,:) = 0.
     g(:,:) = 0.
-!
-!
+
 ! Assign g-factors at altitudes which are sunlit:
-!
-    DO I=1,JMAX
-      GH = (RE+ZZ(I)) * SIN(SZA)
-      IF (SZA .LT. 1.6 .OR. GH .GT. RE) THEN
-        G(1,I) = 0.041
-        G(2,I) = 0.013
-      ENDIF
-    ENDDO
-!
-!
+
+    where (SZA < 1.6 .OR. (RE+ZZ(:)) * SIN(SZA) > RE)
+        G(1,:) = 0.041
+        G(2,:) = 0.013
+    endwhere
+
 ! Calculate rate coefficients as a function of altitude:
-!
-    DO I=1,JMAX
-      T1(I) = (16.*ZTN(I)+28.*ZTI(I)) / (16.+28.) / 300.
-      T2(I) = (16.*ZTN(I)+32.*ZTI(I)) / (16.+32.) / 300.
-      T3(I) = (28.*ZTN(I)+16.*ZTI(I)) / (28.+16.) / 300.
-      T4(I) = (28.*ZTN(I)+32.*ZTI(I)) / (28.+32.) / 300.
-      T5(I) = (16.*ZTN(I)+30.*ZTI(I)) / (16.+30.) / 300.
-      IF (T1(I) .LT. 5.6667) THEN
-        KZ(1,I) = 1.533E-12 - 5.92E-13*T1(I) + 8.6E-14*T1(I)**2
-      ELSE
-        KZ(1,I) = 2.73E-12 - 1.155E-12*T1(I) + 1.483E-13*T1(I)**2
-      ENDIF
-      IF (T2(I) .LT. 6.6667) THEN
-        KZ(2,I) = 3.53E-11 - 1.84E-11*T2(I) + 4.62E-12*T2(I)**2 &
-                           - 4.95E-13*T2(I)**3 + 2.00E-14*T2(I)**4
-      ELSE
-        KZ(2,I) = 2.82E-11 - 7.74E-12*T2(I) + 1.073E-12*T2(I)**2 &
-                           - 5.17E-14*T2(I)**3 + 9.65E-16*T2(I)**4
-      ENDIF
-      KZ(3,I) = 1.793e-10 - 6.242e-11*T3(I) + 1.225e-11*T3(I)**2 &
-                          - 1.016e-12*T3(I)**3 + 3.087e-14*T3(I)**4
-      KZ(4,I) = 5.0E-11 * (1./T4(I)) ** 0.8
-      KZ(5,I) = 6.0E-12
-      KZ(6,I) = 6.9E-13
-      KZ(7,I) = 5.5E-10 * (ZTE(I)/300.) ** 0.5
-      KZ(8,I) = 2.0E-11 * EXP(107.8/ZTN(I))
-      KZ(9,I) = 2.9E-11 * EXP(67.5 /ZTN(I))
-      KZ(10,I) = 8.1E-10 * (ZTE(I)/300.) ** 0.5
-      KZ(11,I) = 2.0E-14
-      KZ(12,I) = 8.0E-10
-      KZ(13,I) = 7.0E-10
-      KZ(14,I) = 6.6E-08 * (300./ZTE(I)) ** 0.5
-      KZ(15,I) = 1.0E-11
-      KZ(16,I) = 4.8E-10
-      KZ(17,I) = 4.8E-10
-      KZ(18,I) = 1.7E-07 * (300./ZTE(I)) ** 0.5
-      KZ(19,I) = 5.2E-11
-      KZ(20,I) = 2.1E-11 * EXP(-1136./ZTN(I))
-      KZ(21,I) = 1.0E-13
-      KZ(22,I) = 4.2E-07 * (300./ZTE(I)) ** 0.85
-      KZ(23,I) = 1.8E-07 * (300./ZTE(I)) ** 0.39
-      KZ(24,I) = 1.95E-07 * (300./ZTE(I)) ** 0.70
-      IF (ZTE(I) .GE. 1200.) KZ(24,I) = 1.6E-07 * (300./ZTE(I)) ** 0.55
-      KZ(25,I) = 6.0E-10
-      KZ(26,I) = 3.1E-11
-      KZ(27,I) = 3.0E-12
-      IF (ZTE(I) .LT. 500.) THEN
-        KZ(28,I) = 1.0E-29
-      ELSE
-        KZ(28,I) = 2.6E-11 * ZTE(I)**0.5 * EXP(-22740./ZTE(I))
-      ENDIF
-      KZ(29,I) = 4.1E-12
-      KZ(30,I) = 4.4E-10
-      KZ(31,I) = 7.0E-11
-      KZ(32,I) = 1.0E-12
-      KZ(33,I) = 1.2E-11
-      KZ(34,I) = 2.0E-12
-      KZ(35,I) = 1.8E-10
-      KZ(36,I) = 4.0E-12 * EXP(-865./ZTN(I))
-      KZ(37,I) = 1.2E-10
-      KZ(38,I) = 1.3E-10
-      KZ(39,I) = 2.0E-11
-      IF (T5(I) .LT. 5) THEN
-        KZ(40,I) = 8.36E-13 - 2.02E-13*T5(I) + 6.95E-14*T5(I)**2
-      ELSE
-        KZ(40,I) = 5.33E-13 - 1.64E-14*T5(I) + 4.72E-14*T5(I)**2 &
-                            - 7.05E-16*T5(I)**3
-      ENDIF
-      KZ(41,I) = 7.3E-13
-      KZ(42,I) = 1.3E-15
-      KZ(43,I) = 1.0E-7
-      KZ(44,I) = 1.4E-10
-      KZ(45,I) = 4.0E-13
-    ENDDO
-!
-!
+
+  T1(:) = (16.*ZTN(:)+28.*ZTI(:)) / (16.+28.) / 300.
+  T2(:) = (16.*ZTN(:)+32.*ZTI(:)) / (16.+32.) / 300.
+  T3(:) = (28.*ZTN(:)+16.*ZTI(:)) / (28.+16.) / 300.
+  T4(:) = (28.*ZTN(:)+32.*ZTI(:)) / (28.+32.) / 300.
+  T5(:) = (16.*ZTN(:)+30.*ZTI(:)) / (16.+30.) / 300.
+  
+  where (T1(:) < 5.6667)
+    KZ(1,:) = 1.533E-12 - 5.92E-13*T1(:) + 8.6E-14*T1(:)**2
+  ELSEwhere
+    KZ(1,:) = 2.73E-12 - 1.155E-12*T1(:) + 1.483E-13*T1(:)**2
+  ENDwhere
+  
+  where (T2(:) < 6.6667) 
+    KZ(2,:) = 3.53E-11 - 1.84E-11*T2(:) + 4.62E-12*T2(:)**2 &
+                       - 4.95E-13*T2(:)**3 + 2.00E-14*T2(:)**4
+  ELSEwhere
+    KZ(2,:) = 2.82E-11 - 7.74E-12*T2(:) + 1.073E-12*T2(:)**2 &
+                       - 5.17E-14*T2(:)**3 + 9.65E-16*T2(:)**4
+  ENDwhere
+  
+  KZ(3,:) = 1.793e-10 - 6.242e-11*T3(:) + 1.225e-11*T3(:)**2 &
+                      - 1.016e-12*T3(:)**3 + 3.087e-14*T3(:)**4
+  KZ(4,:) = 5.0E-11 * (1./T4(:)) ** 0.8
+  KZ(5,:) = 6.0E-12
+  KZ(6,:) = 6.9E-13
+  KZ(7,:) = 5.5E-10 * (ZTE(:)/300.) ** 0.5
+  KZ(8,:) = 2.0E-11 * EXP(107.8/ZTN(:))
+  KZ(9,:) = 2.9E-11 * EXP(67.5 /ZTN(:))
+  KZ(10,:) = 8.1E-10 * (ZTE(:)/300.) ** 0.5
+  KZ(11,:) = 2.0E-14
+  KZ(12,:) = 8.0E-10
+  KZ(13,:) = 7.0E-10
+  KZ(14,:) = 6.6E-08 * (300./ZTE(:)) ** 0.5
+  KZ(15,:) = 1.0E-11
+  KZ(16,:) = 4.8E-10
+  KZ(17,:) = 4.8E-10
+  KZ(18,:) = 1.7E-07 * (300./ZTE(:)) ** 0.5
+  KZ(19,:) = 5.2E-11
+  KZ(20,:) = 2.1E-11 * EXP(-1136./ZTN(:))
+  KZ(21,:) = 1.0E-13
+  KZ(22,:) = 4.2E-07 * (300./ZTE(:)) ** 0.85
+  KZ(23,:) = 1.8E-07 * (300./ZTE(:)) ** 0.39
+  KZ(24,:) = 1.95E-07 * (300./ZTE(:)) ** 0.70
+  
+  where (ZTE(:) >= 1200.)  KZ(24,:) = 1.6E-07 * (300./ZTE(:)) ** 0.55
+  
+  KZ(25,:) = 6.0E-10
+  KZ(26,:) = 3.1E-11
+  KZ(27,:) = 3.0E-12
+  
+  where (ZTE(:) < 500.) 
+    KZ(28,:) = 1.0E-29
+  ELSEwhere
+    KZ(28,:) = 2.6E-11 * ZTE(:)**0.5 * EXP(-22740./ZTE(:))
+  ENDwhere
+  
+  
+  KZ(29,:) = 4.1E-12
+  KZ(30,:) = 4.4E-10
+  KZ(31,:) = 7.0E-11
+  KZ(32,:) = 1.0E-12
+  KZ(33,:) = 1.2E-11
+  KZ(34,:) = 2.0E-12
+  KZ(35,:) = 1.8E-10
+  KZ(36,:) = 4.0E-12 * EXP(-865./ZTN(:))
+  KZ(37,:) = 1.2E-10
+  KZ(38,:) = 1.3E-10
+  KZ(39,:) = 2.0E-11
+  
+  where (T5(:) < 5) 
+    KZ(40,:) = 8.36E-13 - 2.02E-13*T5(:) + 6.95E-14*T5(:)**2
+  ELSEwhere
+    KZ(40,:) = 5.33E-13 - 1.64E-14*T5(:) + 4.72E-14*T5(:)**2 &
+                        - 7.05E-16*T5(:)**3
+  ENDwhere
+
+  KZ(41,:) = 7.3E-13
+  KZ(42,:) = 1.3E-15
+  KZ(43,:) = 1.0E-7
+  KZ(44,:) = 1.4E-10
+  KZ(45,:) = 4.0E-13
+
 ! Calculate Electron impact ionization, photoionization, and electron
 ! impact dissociation rates at each altitude; put a priori electron
 ! density in calculated electron density array: put a priori N(2D) in DEN array:
-!
-    DO I=1,JMAX
-      OEI(I)   = SION(1,I)+PIA(1,I)
-      O2EI(I)  = SION(2,I)+PIA(2,I)
-      RN2EI(I) = SION(3,I)+PIA(3,I)
-      TEI(I)   = OEI(I)+O2EI(I)+RN2EI(I)
-      OPI(I)   = PHOTOI(1,1,I)+PHOTOI(2,1,I)+PHOTOI(3,1,I)+PHOTOI(4,1,I)+PHOTOI(5,1,I)
-      O2PI(I)  = PHOTOI(1,2,I)+PHOTOI(2,2,I)+PHOTOI(3,2,I)
-      RN2PI(I) = PHOTOI(1,3,I)+PHOTOI(2,3,I)+PHOTOI(3,3,I)+PHOTOI(4,3,I)+PHOTOI(5,3,I)
-      TPI(I)   = OPI(I)+O2PI(I)+RN2PI(I)+PHOTOI(4,2,I)+PHOTOI(6,3,I)+PHONO(1,I)
-      TIR(I)   = TEI(I)+TPI(I)
-      RN2ED(I) = AGLW(5,3,I)+AGLW(6,3,I)+AGLW(7,3,I)+B(24)*PIA(3,I)
-      SRCED(I) = AGLW(4,2,I) + B(35)*PIA(2,I)
-      E(I)     = ZE(I)
-      DEN(10,I)= ZND(I)
-    ENDDO
-!
-!
+
+  OEI(:)   = SION(1,:)+PIA(1,:)
+  O2EI(:)  = SION(2,:)+PIA(2,:)
+  RN2EI(:) = SION(3,:)+PIA(3,:)
+  TEI(:)   = OEI(:)+O2EI(:)+RN2EI(:)
+  OPI(:)   = PHOTOI(1,1,:)+PHOTOI(2,1,:)+PHOTOI(3,1,:)+PHOTOI(4,1,:)+PHOTOI(5,1,:)
+  O2PI(:)  = PHOTOI(1,2,:)+PHOTOI(2,2,:)+PHOTOI(3,2,:)
+  RN2PI(:) = PHOTOI(1,3,:)+PHOTOI(2,3,:)+PHOTOI(3,3,:)+PHOTOI(4,3,:)+PHOTOI(5,3,:)
+  TPI(:)   = OPI(:)+O2PI(:)+RN2PI(:)+PHOTOI(4,2,:)+PHOTOI(6,3,:)+PHONO(1,:)
+  TIR(:)   = TEI(:)+TPI(:)
+  RN2ED(:) = AGLW(5,3,:)+AGLW(6,3,:)+AGLW(7,3,:)+B(24)*PIA(3,:)
+  SRCED(:) = AGLW(4,2,:) + B(35)*PIA(2,:)
+  E(:)     = ZE(:)
+  DEN(10,:)= ZND(:)
+
 ! Find level below which electron density will be calculated:
     J200 = 0
     IF (KCHEM >= 4) THEN
@@ -351,149 +349,131 @@
         endif
       ENDDO
     ENDIF
-!
-!
+
 ! Iterative loop assures that electron density and feedback reactions
 ! (O+(2P,2D)+e, O+(4S)+N(2D), N2++O) are correctly computed:
-!
-    DO ITER=1,5
-!
-!
+
+    itr: DO ITER=1,5
+
 ! Calculate atomic ion densities at each altitude:
-!
-    DO I=1,JMAX
-!
-!
+
 ! O+(2P):
 !
-      P(1,I)= PHOTOI(3,1,I) &
-            + B(41) * PHOTOI(5,1,I) &
-            + B(30) * PHOTOI(4,2,I) &
-            + B(9)  * OEI(I) &
-            + B(12) * O2EI(I)
-      L(1,I)= KZ(16,I) * ZN2(I) &
-            + KZ(17,I) * ZO2(I) &
-            + KZ(19,I) * ZO(I) &
-            + KZ(18,I) * E(I) &
+      P(1,:)= PHOTOI(3,1,:) &
+            + B(41) * PHOTOI(5,1,:) &
+            + B(30) * PHOTOI(4,2,:) &
+            + B(9)  * OEI(:) &
+            + B(12) * O2EI(:)
+      L(1,:)= KZ(16,:) * ZN2(:) &
+            + KZ(17,:) * ZO2(:) &
+            + KZ(19,:) * ZO(:) &
+            + KZ(18,:) * E(:) &
             + A(8) &
             + A(7)
-      DEN(1,I) = P(1,I) / L(1,I)
-!
-!
+      DEN(1,:) = P(1,:) / L(1,:)
+
 ! O+(2D):
-!
-      P(2,I)= PHOTOI(2,1,I) &
-            + B(42) * PHOTOI(5,1,I) &
-            + B(31) * PHOTOI(4,2,I) &
-            + B(10) * OEI(I) &
-            + B(13) * O2EI(I) &
-            + B(8)  * KZ(18,I) * DEN(1,I) * E(I) &
-            + A(8)  * DEN(1,I)
-      L(2,I)= KZ(12,I) * ZN2(I) &
-            + KZ(13,I) * ZO2(I) &
-            + KZ(15,I) * ZO(I) &
-            + KZ(14,I) * E(I) &
+
+      P(2,:)= PHOTOI(2,1,:) &
+            + B(42) * PHOTOI(5,1,:) &
+            + B(31) * PHOTOI(4,2,:) &
+            + B(10) * OEI(:) &
+            + B(13) * O2EI(:) &
+            + B(8)  * KZ(18,:) * DEN(1,:) * E(:) &
+            + A(8)  * DEN(1,:)
+      L(2,:)= KZ(12,:) * ZN2(:) &
+            + KZ(13,:) * ZO2(:) &
+            + KZ(15,:) * ZO(:) &
+            + KZ(14,:) * E(:) &
             + A(6)
-      DEN(2,I) = P(2,I) / L(2,I)
-!
-!
+      DEN(2,:) = P(2,:) / L(2,:)
 ! N+:
-!
-      IF (KCHEM .GE. 2) THEN
-        P(4,I) = PHOTOI(6,3,I) &
-               + B(15) * RN2EI(I) &
-               + KZ(38,I) * DEN(3,I) * DEN(10,I)
-        L(4,I) = KZ(25,I) * ZO2(I) &
-               + KZ(32,I) * ZO(I)
-        DEN(4,I) = P(4,I) / L(4,I)
+
+      IF (KCHEM >= 2) THEN
+        P(4,:) = PHOTOI(6,3,:) &
+               + B(15) * RN2EI(:) &
+               + KZ(38,:) * DEN(3,:) * DEN(10,:)
+        L(4,:) = KZ(25,:) * ZO2(:) &
+               + KZ(32,:) * ZO(:)
+        DEN(4,:) = P(4,:) / L(4,:)
       ENDIF
-!
-!
+
 ! O+(4S):
 !
-      IF (KCHEM .GE. 3) THEN
-        P(3,I)= PHOTOI(1,1,I) + PHOTOI(4,1,I) &
-              + B(32) * PHOTOI(4,2,I) &
-              + B(11) * OEI(I) &
-              + B(14) * O2EI(I)  &
-              + KZ(14,I) * DEN(2,I) * E(I) & 
-              + KZ(15,I) * DEN(2,I) * ZO(I) & 
-              + A(6) * DEN(2,I) &
-              + (1.-B(8)) * KZ(18,I) * DEN(1,I) * E(I) &
-              + KZ(19,I) * DEN(1,I) * ZO(I) & 
-              + A(7) * DEN(1,I) &
-              + KZ(32,I) * DEN(4,I) * ZO(I) &
-              + KZ(39,I) * DEN(5,I) * ZO(I)
-        L(3,I)= KZ(1,I) * ZN2(I) &
-              + KZ(2,I) * ZO2(I) &
-              + KZ(38,I) * DEN(10,I)
-        DEN(3,I) = P(3,I) / L(3,I)
+      IF (KCHEM >= 3) THEN
+        P(3,:)= PHOTOI(1,1,:) + PHOTOI(4,1,:) &
+              + B(32) * PHOTOI(4,2,:) &
+              + B(11) * OEI(:) &
+              + B(14) * O2EI(:)  &
+              + KZ(14,:) * DEN(2,:) * E(:) & 
+              + KZ(15,:) * DEN(2,:) * ZO(:) & 
+              + A(6) * DEN(2,:) &
+              + (1.-B(8)) * KZ(18,:) * DEN(1,:) * E(:) &
+              + KZ(19,:) * DEN(1,:) * ZO(:) & 
+              + A(7) * DEN(1,:) &
+              + KZ(32,:) * DEN(4,:) * ZO(:) &
+              + KZ(39,:) * DEN(5,:) * ZO(:)
+        L(3,:)= KZ(1,:) * ZN2(:) &
+              + KZ(2,:) * ZO2(:) &
+              + KZ(38,:) * DEN(10,:)
+        DEN(3,:) = P(3,:) / L(3,:)
       ENDIF
-!
-    ENDDO    ! bottom of atomic ion loop
-!
-!
+
 ! Above 200 km, (or at all altitudes if KCHEM=3) use a priori
 ! electron density to calculate O+(4S):
 !
-    IF (KCHEM .GE. 3) THEN
-!
-      DO I=J200+1,JMAX
-        P(5,I)= RN2PI(I) &
-                + (1.-B(15)) * RN2EI(I) &
-                + KZ(12,I) * DEN(2,I) * ZN2(I) &
-                + KZ(16,I) * DEN(1,I) * ZN2(I)
-        L(5,I)= KZ(3,I)  * ZO(I) &
-                + KZ(4,I)  * ZO2(I) &
-                + KZ(23,I) * E(I) &
-                + KZ(39,I) * ZO(I)
-        DEN(5,I) = P(5,I) / L(5,I)
-        QQ(I) = PHONO(1,I) &
-                + KZ(3,I)  * DEN(5,I) * ZO(I) &
-                + B(21) * KZ(25,I) * DEN(4,I) * ZO2(I)
-        RR(I) = KZ(30,I) * ZNO(I) &
-                + KZ(37,I) * ZNS(I)
-        SS(I) = KZ(1,I) * ZN2(I) &
-                + KZ(40,I) * ZNO(I)
-        TT(I) = KZ(22,I) * E(I)
-        UU(I) = O2PI(I) &
-                + (1.-B(12)-B(13)-B(14)) * O2EI(I) &
-                + KZ(13,I) * DEN(2,I) * ZO2(I) &
-                + KZ(17,I) * DEN(1,I) * ZO2(I) &
-                + KZ(4,I)  * DEN(5,I) * ZO2(I) &
-                + B(22) * KZ(25,I) * DEN(4,I) * ZO2(I)
-        VV(I) = KZ(2,I) * ZO2(I)
-        WW(I) = KZ(24,I) * E(I) &
-                + KZ(30,I) * ZNO(I) &
-                + KZ(37,I) * ZNS(I)
-        XX(I) = DEN(1,I) + DEN(2,I) + DEN(4,I) + DEN(5,I)
-        DEN(3,I) = (TT(I)*WW(I)*E(I) - TT(I)*WW(I)*XX(I) - TT(I)*UU(I) &
-                   - QQ(I)*WW(I) - RR(I)*UU(I) ) / &
-                      (TT(I)*WW(I) + TT(I)*VV(I) + RR(I)*VV(I) + SS(I)*WW(I))
-        if (den(3,i) .lt. 0.) den(3,i)=0.
-      ENDDO
-!
+    IF (KCHEM >= 3) THEN
+      j = j200+1
+      
+      P(5,J:JMAX) = RN2PI(J:JMAX) &
+        + (1.-B(15)) * RN2EI(J:JMAX) &
+        + KZ(12,J:JMAX) * DEN(2,J:JMAX) * ZN2(J:JMAX) &
+        + KZ(16,J:JMAX) * DEN(1,J:JMAX) * ZN2(J:JMAX)
+        
+      L(5,J:JMAX)= KZ(3,J:JMAX)  * ZO(J:JMAX) &
+              + KZ(4,J:JMAX)  * ZO2(J:JMAX) &
+              + KZ(23,J:JMAX) * E(J:JMAX) &
+              + KZ(39,J:JMAX) * ZO(J:JMAX)
+      DEN(5,J:JMAX) = P(5,J:JMAX) / L(5,J:JMAX)
+      QQ(J:JMAX) = PHONO(1,J:JMAX) &
+              + KZ(3,J:JMAX)  * DEN(5,J:JMAX) * ZO(J:JMAX) &
+              + B(21) * KZ(25,J:JMAX) * DEN(4,J:JMAX) * ZO2(J:JMAX)
+      RR(J:JMAX) = KZ(30,J:JMAX) * ZNO(J:JMAX) &
+              + KZ(37,J:JMAX) * ZNS(J:JMAX)
+      SS(J:JMAX) = KZ(1,J:JMAX) * ZN2(J:JMAX) &
+              + KZ(40,J:JMAX) * ZNO(J:JMAX)
+      TT(J:JMAX) = KZ(22,J:JMAX) * E(J:JMAX)
+      UU(J:JMAX) = O2PI(J:JMAX) &
+              + (1.-B(12)-B(13)-B(14)) * O2EI(J:JMAX) &
+              + KZ(13,J:JMAX) * DEN(2,J:JMAX) * ZO2(J:JMAX) &
+              + KZ(17,J:JMAX) * DEN(1,J:JMAX) * ZO2(J:JMAX) &
+              + KZ(4,J:JMAX)  * DEN(5,J:JMAX) * ZO2(J:JMAX) &
+              + B(22) * KZ(25,J:JMAX) * DEN(4,J:JMAX) * ZO2(J:JMAX)
+      VV(J:JMAX) = KZ(2,J:JMAX) * ZO2(J:JMAX)
+      WW(J:JMAX) = KZ(24,J:JMAX) * E(J:JMAX) &
+              + KZ(30,J:JMAX) * ZNO(J:JMAX) &
+              + KZ(37,J:JMAX) * ZNS(J:JMAX)
+      XX(J:JMAX) = DEN(1,J:JMAX) + DEN(2,J:JMAX) + DEN(4,J:JMAX) + DEN(5,J:JMAX)
+      DEN(3,J:JMAX) = (TT(J:JMAX)*WW(J:JMAX)*E(J:JMAX) - TT(J:JMAX)*WW(J:JMAX)*XX(J:JMAX) - TT(J:JMAX)*UU(J:JMAX) &
+                 - QQ(J:JMAX)*WW(J:JMAX) - RR(J:JMAX)*UU(J:JMAX) ) / &
+                    (TT(J:JMAX)*WW(J:JMAX) + TT(J:JMAX)*VV(J:JMAX) + RR(J:JMAX)*VV(J:JMAX) + SS(J:JMAX)*WW(J:JMAX))
+
+    
+      where (den(3,J:JMAX) < 0.)   den(3,J:JMAX)=0.
+
     ENDIF
-!
-!
+
 ! If KCHEM=4, calculate electron density below 200 km using iterative method:
 ! First time: approximate electron density using effective recombination rate.
 ! Subsequent iterations: update electron density from sum of ions.
-!
-    if (kchem .ge. 4) then
-!
-      if (iter .eq. 1) then
-        do i=1,j200
-          tatomi=den(1,i)+den(2,i)+den(3,i)+den(4,i)
-          alphaef=(kz(22,i)+kz(24,i))/2.
-          e(i)=(tatomi+sqrt(tatomi**2+4.*tir(i)/alphaef))/2.
-        enddo
+   
+   if (kchem >= 4) then
+      if (iter == 1) then
+          tatomi(:j200) = sum(den(1:4,:j200),1)
+          alphaef(:j200) = (kz(22,:j200) + kz(24,:j200))/2.
+          e(:j200)=(tatomi(:j200)+sqrt(tatomi(:j200)**2 + 4*tir(:j200)/alphaef(:j200)))/2.
       else
-        do i=1,j200
-          toti = den(1,i)+den(2,i)+den(3,i)+den(4,i) &
-                +den(5,i)+den(6,i)+den(7,i)
-          e(i) = (toti + e(i)) / 2.
-        enddo
+         e(:j200) = (sum(den(:7,:j200),1) + e(:j200)) / 2.
       endif
 !
 !
@@ -508,269 +488,247 @@
 !
 !
 ! Calculate molecular ion densities and excited species densites:
-!
-    DO I=1,JMAX
-!
-!
+
 ! N2+:
 !
-      IF (KCHEM .GE. 2) THEN
-        P(5,I)= RN2PI(I) &
-              + (1.-B(15)) * RN2EI(I) &
-              + KZ(12,I) * DEN(2,I) * ZN2(I) &
-              + KZ(16,I) * DEN(1,I) * ZN2(I)
-        L(5,I)= KZ(3,I)  * ZO(I) &
-              + KZ(4,I)  * ZO2(I) &
-              + KZ(23,I) * E(I) &
-              + KZ(39,I) * ZO(I)
-          DEN(5,I) = P(5,I) / L(5,I)
-      ENDIF
-!
-!
+  IF (KCHEM >= 2) THEN
+    P(5,:)= RN2PI(:) &
+          + (1.-B(15)) * RN2EI(:) &
+          + KZ(12,:) * DEN(2,:) * ZN2(:) &
+          + KZ(16,:) * DEN(1,:) * ZN2(:)
+    L(5,:)= KZ(3,:)  * ZO(:) &
+          + KZ(4,:)  * ZO2(:) &
+          + KZ(23,:) * E(:) &
+          + KZ(39,:) * ZO(:)
+      DEN(5,:) = P(5,:) / L(5,:)
+  ENDIF
+  
 ! O2+:
 !
-      IF (KCHEM .GE. 3) THEN
-        P(6,I)= O2PI(I) &
-              + (1.-B(12)-B(13)-B(14)) * O2EI(I) &
-              + KZ(2,I)  * DEN(3,I) * ZO2(I) &
-              + KZ(13,I) * DEN(2,I) * ZO2(I) &
-              + KZ(17,I) * DEN(1,I) * ZO2(I) &
-              + KZ(4,I)  * DEN(5,I) * ZO2(I) &
-              + B(22) * KZ(25,I) * DEN(4,I) * ZO2(I)
-        L(6,I)= KZ(24,I) * E(I) &
-              + KZ(30,I) * ZNO(I) &
-              + KZ(37,I) * ZNS(I)
-        DEN(6,I) = P(6,I)/ L(6,I)
-      ENDIF
-!
-!
+  IF (KCHEM >= 3) THEN
+    P(6,:)= O2PI(:) &
+          + (1.-B(12)-B(13)-B(14)) * O2EI(:) &
+          + KZ(2,:)  * DEN(3,:) * ZO2(:) &
+          + KZ(13,:) * DEN(2,:) * ZO2(:) &
+          + KZ(17,:) * DEN(1,:) * ZO2(:) &
+          + KZ(4,:)  * DEN(5,:) * ZO2(:) &
+          + B(22) * KZ(25,:) * DEN(4,:) * ZO2(:)
+    L(6,:)= KZ(24,:) * E(:) &
+          + KZ(30,:) * ZNO(:) &
+          + KZ(37,:) * ZNS(:)
+    DEN(6,:) = P(6,:)/ L(6,:)
+  ENDIF
+  
+  
 ! NO+:
 !
-      IF (KCHEM .GE. 3) THEN
-        P(7,I)= PHONO(1,I) &
-              + KZ(1,I)  * DEN(3,I) * ZN2(I) &
-              + KZ(40,I) * DEN(3,I) * ZNO(I) &
-              + KZ(3,I)  * DEN(5,I) * ZO(I) &
-              + B(21) * KZ(25,I) * DEN(4,I) * ZO2(I) &
-              + KZ(30,I) * DEN(6,I) * ZNO(I) &
-              + KZ(37,I) * DEN(6,I) * ZNS(I)
-        L(7,I)= KZ(22,I) * E(I)
-        DEN(7,I) = P(7,I) / L(7,I)
-      ENDIF
-!
-!
+  IF (KCHEM >= 3) THEN
+    P(7,:)= PHONO(1,:) &
+          + KZ(1,:)  * DEN(3,:) * ZN2(:) &
+          + KZ(40,:) * DEN(3,:) * ZNO(:) &
+          + KZ(3,:)  * DEN(5,:) * ZO(:) &
+          + B(21) * KZ(25,:) * DEN(4,:) * ZO2(:) &
+          + KZ(30,:) * DEN(6,:) * ZNO(:) &
+          + KZ(37,:) * DEN(6,:) * ZNS(:)
+    L(7,:)= KZ(22,:) * E(:)
+    DEN(7,:) = P(7,:) / L(7,:)
+  ENDIF
+  
 ! N2(A):
 !
-      P(8,I)= AGLW(1,3,I) + AGLW(2,3,I) + B(43)*AGLW(3,3,I)
-      L(8,I)= KZ(26,I) * ZO(I) &
-            + KZ(29,I) * ZO2(I) &
-            + A(10)
-      DEN(8,I) = P(8,I) / L(8,I)
-!
-!
+  P(8,:)= AGLW(1,3,:) + AGLW(2,3,:) + B(43)*AGLW(3,3,:)
+  L(8,:)= KZ(26,:) * ZO(:) &
+        + KZ(29,:) * ZO2(:) &
+        + A(10)
+  DEN(8,:) = P(8,:) / L(8,:)
+  
 ! N(2P):
 !
-      P(9,I)= B(28) * PHOTOD(1,3,I) &
-            + B(28) * PHOTOI(6,3,I) &
-            + B(26) * RN2ED(I) &
-            + B(23) * KZ(23,I) * DEN(5,I) * E(I)
-      L(9,I)= KZ(33,I) * ZO(I) &
-            + KZ(34,I) * ZO2(I) &
-            + KZ(35,I) * ZNO(I) &
-            + A(11) &
-            + A(12)
-      DEN(9,I) = P(9,I) / L(9,I)
-!
-!
+  P(9,:)= B(28) * PHOTOD(1,3,:) &
+        + B(28) * PHOTOI(6,3,:) &
+        + B(26) * RN2ED(:) &
+        + B(23) * KZ(23,:) * DEN(5,:) * E(:)
+  L(9,:)= KZ(33,:) * ZO(:) &
+        + KZ(34,:) * ZO2(:) &
+        + KZ(35,:) * ZNO(:) &
+        + A(11) &
+        + A(12)
+  DEN(9,:) = P(9,:) / L(9,:)
+  
 ! N(2D):
 !
-      P(10,I)= B(27) * PHOTOD(1,3,I) &
-             + B(27) * PHOTOI(6,3,I) &
-             + B(25) * RN2ED(I) &
-             + B(16) * B(15) * RN2EI(I) &
-             + B(3)  * KZ(22,I) * DEN(7,I) * E(I) &
-             + B(4)  * KZ(23,I) * DEN(5,I) * E(I) &
-             + B(5)  * KZ(3,I)  * DEN(5,I) * ZO(I) &
-             + B(29) * KZ(33,I) * DEN(9,I) * ZO(I) &
-             + A(12) * DEN(9,I)
-      L(10,I)= KZ(5,I)  * ZO2(I) &
-             + KZ(6,I)  * ZO(I) &
-             + KZ(7,I)  * E(I) &
-             + KZ(31,I) * ZNO(I) &
-             + KZ(38,I) * DEN(3,I) &
-             + A(1)
-      DEN(10,I) = P(10,I) / L(10,I)
-!
-!
+  P(10,:)= B(27) * PHOTOD(1,3,:) &
+         + B(27) * PHOTOI(6,3,:) &
+         + B(25) * RN2ED(:) &
+         + B(16) * B(15) * RN2EI(:) &
+         + B(3)  * KZ(22,:) * DEN(7,:) * E(:) &
+         + B(4)  * KZ(23,:) * DEN(5,:) * E(:) &
+         + B(5)  * KZ(3,:)  * DEN(5,:) * ZO(:) &
+         + B(29) * KZ(33,:) * DEN(9,:) * ZO(:) &
+         + A(12) * DEN(9,:)
+  L(10,:)= KZ(5,:)  * ZO2(:) &
+         + KZ(6,:)  * ZO(:) &
+         + KZ(7,:)  * E(:) &
+         + KZ(31,:) * ZNO(:) &
+         + KZ(38,:) * DEN(3,:) &
+         + A(1)
+  DEN(10,:) = P(10,:) / L(10,:)
+
 ! O(1S):
 !
-      BZ(1,I) = 0.12 + 0.02 * ALOG10 (E(I)/ZO(I)*(300./ZTE(I))**0.7)
-      IF (BZ(1,I) .LT. 0.03) BZ(1,I)=0.03
-      P(11,I)= AGLW(2,1,I) &
-             + BZ(1,I) * KZ(24,I) * DEN(6,I)  * E(I) &
-             + B(18) * KZ(26,I) * DEN(8,I) * ZO(I) &
-             + B(33) * KZ(37,I) * DEN(6,I) * ZNS(I) &
-             + B(34) * KZ(31,I) * DEN(10,I) * ZNO(I) &
-             + PHOTOD(2,2,I)
-      L(11,I)= KZ(11,I) * ZO(I) &
-             + KZ(36,I) * ZO2(I) &
-             + A(5) &
-             + A(4)
-      DEN(11,I) = P(11,I) / L(11,I)
-!
-!
+  BZ(1,:) = 0.12 + 0.02 * LOG10 (E(:)/ZO(:)*(300./ZTE(:))**0.7)
+  
+  where (BZ(1,:) < 0.03)  BZ(1,:)=0.03
+  
+  P(11,:)= AGLW(2,1,:) &
+         + BZ(1,:) * KZ(24,:) * DEN(6,:)  * E(:) &
+         + B(18) * KZ(26,:) * DEN(8,:) * ZO(:) &
+         + B(33) * KZ(37,:) * DEN(6,:) * ZNS(:) &
+         + B(34) * KZ(31,:) * DEN(10,:) * ZNO(:) &
+         + PHOTOD(2,2,:)
+  L(11,:)= KZ(11,:) * ZO(:) &
+         + KZ(36,:) * ZO2(:) &
+         + A(5) &
+         + A(4)
+  DEN(11,:) = P(11,:) / L(11,:)
+  
+
 ! O(1D):
 !
-      P(12,I)= AGLW(1,1,I) &
-             + KZ(28,I) * E(I)  * ZO(I) &
-             + B(2)  * KZ(24,I) * DEN(6,I)  * E(I) &
-             + B(6)  * KZ(5,I)  * DEN(10,I) * ZO2(I) &
-             + B(20) * KZ(6,I)  * DEN(10,I) * ZO(I) &
-             + B(17) * KZ(25,I) * DEN(4,I)  * ZO2(I) &
-             + B(7)  * KZ(15,I) * DEN(2,I)  * ZO(I) &
-             + SRCED(I) &
-             + PHOTOD(1,2,I) &
-             + A(5)  * DEN(11,I)
-      L(12,I)= KZ(8,I)  * ZN2(I)  &
-             + KZ(9,I)  * ZO2(I) &
-             + KZ(10,I) * E(I) &
-             + KZ(27,I) * ZO(I) &
-             + A(2) &
-             + A(3)
-      DEN(12,I) = P(12,I) / L(12,I)
-!
-    ENDDO   ! bottome of molecular ion / excited species loop
-!
-    ENDDO   ! bottom of iterative looop
-!
-!
+  P(12,:)= AGLW(1,1,:) &
+         + KZ(28,:) * E(:)  * ZO(:) &
+         + B(2)  * KZ(24,:) * DEN(6,:)  * E(:) &
+         + B(6)  * KZ(5,:)  * DEN(10,:) * ZO2(:) &
+         + B(20) * KZ(6,:)  * DEN(10,:) * ZO(:) &
+         + B(17) * KZ(25,:) * DEN(4,:)  * ZO2(:) &
+         + B(7)  * KZ(15,:) * DEN(2,:)  * ZO(:) &
+         + SRCED(:) &
+         + PHOTOD(1,2,:) &
+         + A(5)  * DEN(11,:)
+  L(12,:)= KZ(8,:)  * ZN2(:)  &
+         + KZ(9,:)  * ZO2(:) &
+         + KZ(10,:) * E(:) &
+         + KZ(27,:) * ZO(:) &
+         + A(2) &
+         + A(3)
+  DEN(12,:) = P(12,:) / L(12,:)
+
+ENDDO itr   ! bottom of iterative looop
+
+
 ! Impose charge neutrality:
-!
-    do i=1,j200
-      e(i)=den(1,i)+den(2,i)+den(3,i)+den(4,i)+den(5,i)+den(6,i)+den(7,i)
-    enddo
-!
-!
+
+    e(:j200) = sum(den(:7,:j200),1)
+
+
 ! Calculate O- for mutual neutralization source of O*
-!
-    do i=1,jmax
-      ominus(i) = (kz(42,i)*zo(i)*e(i)) / (kz(43,i)*den(3,i)+kz(44,i)*zo(i))
-    enddo
-!
-!
+
+    ominus(:) = (kz(42,:)*zo(:)*e(:)) / (kz(43,:)*den(3,:)+kz(44,:)*zo(:))
+
 ! Calculate airglow emission rates; fill ZCETA array with partial rates
 ! from each source; fill ZETA array with total rate for each emission:
-!
-    DO I=1,JMAX
-!
-      ZCETA(1,1,I) = B(39) * AGLW(3,3,I)
-      ZCETA(2,1,I) = B(40) * A(10) * P(8,I) / L(8,I)
-!
-      ZCETA(1,2,I) = B(38) * B(36) * RN2EI(I)
-      ZCETA(2,2,I) = B(38) * PHOTOI(3,3,I)
-      ZCETA(3,2,I) = G(2,I) * DEN(5,I)
-!
-      ZCETA(1,3,I) = A(1) * B(27) * PHOTOD(1,3,I) / L(10,I)
-      ZCETA(2,3,I) = A(1) * B(27) * PHOTOI(6,3,I) / L(10,I)
-      ZCETA(3,3,I) = A(1) * B(25) * RN2ED(I) / L(10,I)
-      ZCETA(4,3,I) = A(1) * B(16) * B(15) * RN2EI(I) / L(10,I)
-      ZCETA(5,3,I) = A(1) * B(3)  * KZ(22,I) * DEN(7,I) * E(I) /L(10,I)
-      ZCETA(6,3,I) = A(1) * B(4)  * KZ(23,I) * DEN(5,I) * E(I) /L(10,I)
-      ZCETA(7,3,I) = A(1) * B(5)  * KZ(3,I)  * DEN(5,I) * ZO(I) /L(10,I)
-      ZCETA(8,3,I) = A(1) * B(29) * KZ(33,I) * DEN(9,I) * ZO(I) /L(10,I)
-      ZCETA(9,3,I) = A(1) * A(12) * DEN(9,I) / L(10,I)
-!
-      ZCETA(1,4,I) = A(5) * AGLW(2,1,I) / L(11,I)
-      ZCETA(2,4,I) = A(5) * BZ(1,I)*KZ(24,I) * DEN(6,I) * E(I)  /L(11,I)
-      ZCETA(3,4,I) = A(5) * B(18) * KZ(26,I) * DEN(8,I) * ZO(I) /L(11,I)
-      ZCETA(4,4,I) = A(5) * B(33) * KZ(37,I) * DEN(6,I) * ZNS(I)/L(11,I)
-      ZCETA(5,4,I) = A(5) * B(34) * KZ(31,I) * DEN(10,I)* ZNO(I)/L(11,I)
-      ZCETA(6,4,I) = PHOTOD(2,2,I) / L(11,I)
-!
-      ZCETA(1,5,I) = A(2) * AGLW(1,1,I) / L(12,I)
-      ZCETA(2,5,I) = A(2) * KZ(28,I) * E(I)  * ZO(I) / L(12,I)
-      ZCETA(3,5,I) = A(2) * B(2)  * KZ(24,I) * DEN(6,I)  * E(I)/L(12,I)
-      ZCETA(4,5,I) = A(2) * B(6)  * KZ(5,I)  * DEN(10,I) *ZO2(I)/L(12,I)
-      ZCETA(5,5,I) = A(2) * B(20) * KZ(6,I)  * DEN(10,I) * ZO(I)/L(12,I)
-      ZCETA(6,5,I) = A(2) * B(17) * KZ(25,I) * DEN(4,I) * ZO2(I)/L(12,I)
-      ZCETA(7,5,I) = A(2) * B(7)  * KZ(15,I) * DEN(2,I)  * ZO(I)/L(12,I)
-      ZCETA(8,5,I) = A(2) * SRCED(I) / L(12,I)
-      ZCETA(9,5,I) = A(2) * PHOTOD(1,2,I) / L(12,I)
-      ZCETA(10,5,I)= A(2) * A(5)  * DEN(11,I) / L(12,I)
-!
-      ZCETA(1,6,I) = A(8) * (PHOTOI(3,1,I)+B(41)*PHOTOI(5,1,I)) / L(1,I)
-      ZCETA(2,6,I) = A(8) * B(30) * PHOTOI(4,2,I) / L(1,I)
-      ZCETA(3,6,I) = A(8) * B(9) * OEI(I) / L(1,I)
-      ZCETA(4,6,I) = A(8) * B(12) * O2EI(I) / L(1,I)
-!
-      ZCETA(1,7,I) = A(12) * B(28) * PHOTOD(1,3,I) / L(9,I)
-      ZCETA(2,7,I) = A(12) * B(28) * PHOTOI(6,3,I) / L(9,I)
-      ZCETA(3,7,I) = A(12) * B(26) * RN2ED(I) / L(9,I)
-      ZCETA(4,7,I) = A(12) * B(23) * KZ(23,I) * DEN(5,I) * E(I) / L(9,I)
-!
-      ZCETA(1,8,I) = A(11) * B(28) * PHOTOD(1,3,I) / L(9,I)
-      ZCETA(2,8,I) = A(11) * B(28) * PHOTOI(6,3,I) / L(9,I)
-      ZCETA(3,8,I) = A(11) * B(26) * RN2ED(I) / L(9,I)
-      ZCETA(4,8,I) = A(11) * B(23) * KZ(23,I) * DEN(5,I) * E(I) / L(9,I)
-!
-      ZCETA(1,9,I) = AGLW(5,1,I)
-      ZCETA(2,9,I) = KZ(41,I) * DEN(3,I) * E(I)
-      ZCETA(3,9,I) = B(49) * KZ(43,I) * OMINUS(I) * DEN(3,I)
-!
-      ZCETA(1,10,I) = AGLW(6,1,I)
-      ZCETA(2,10,I) = AGLW(7,1,I)
-      ZCETA(3,10,I) = B(44) * AGLW(8,1,I)
-!
-      ZCETA(1,11,I) = A(6) * (PHOTOI(2,1,I)+B(42)*PHOTOI(5,1,I))/ L(2,I)
-      ZCETA(2,11,I) = A(6) * B(31) * PHOTOI(4,2,I) / L(2,I)
-      ZCETA(3,11,I) = A(6) * B(10) * OEI(I) / L(2,I)
-      ZCETA(4,11,I) = A(6) * B(13) * O2EI(I) / L(2,I)
-      ZCETA(5,11,I) = A(6) * B(8)  * KZ(18,I) * DEN(1,I) * E(I) / L(2,I)
-      ZCETA(6,11,I) = A(6) * A(8)  * DEN(1,I) / L(2,I)
-!
-      ZCETA(1,12,I) = AGLW(4,3,I) * B(48)
-!
-      ZCETA(1,13,I) = AGLW(3,1,I)
-      ZCETA(2,13,I) = AGLW(5,1,I)
-      ZCETA(3,13,I) = KZ(41,I) * DEN(3,I) * E(I)
-      ZCETA(4,13,I) = B(49) * KZ(43,I) * OMINUS(I) * DEN(3,I)
-!
-      ZCETA(1,14,I) = B(46)*PHOTOI(6,3,I)
-      ZCETA(2,14,I) = B(47)*B(15)*RN2EI(I)
-!
-      ZCETA(1,15,I) = AGLW(4,1,I)
-      ZCETA(2,15,I) = AGLW(6,1,I)
-      ZCETA(3,15,I) = AGLW(7,1,I)
-      ZCETA(4,15,I) = B(44) * AGLW(8,1,I)
-      ZCETA(5,15,I) = KZ(45,I) * DEN(3,I) * E(I)
-!
-      ZETA(1,I)  = ZCETA(1,1,I)+ZCETA(2,1,I)
-      ZETA(2,I)  = ZCETA(1,2,I)+ZCETA(2,2,I)+ZCETA(3,2,I)
-      ZETA(3,I)  = ZCETA(1,3,I)+ZCETA(2,3,I)+ZCETA(3,3,I) &
-                  +ZCETA(4,3,I)+ZCETA(5,3,I)+ZCETA(6,3,I) &
-                  +ZCETA(7,3,I)+ZCETA(8,3,I)+ZCETA(9,3,I)
-      ZETA(4,I)  = ZCETA(1,4,I)+ZCETA(2,4,I)+ZCETA(3,4,I) &
-                  +ZCETA(4,4,I)+ZCETA(5,4,I)+ZCETA(6,4,I)
-      ZETA(5,I)  = ZCETA(1,5,I)+ZCETA(2,5,I)+ZCETA(3,5,I) &
-                  +ZCETA(4,5,I)+ZCETA(5,5,I)+ZCETA(6,5,I) &
-                  +ZCETA(7,5,I)+ZCETA(8,5,I)+ZCETA(9,5,I) &
-                  +ZCETA(10,5,I)
-      ZETA(6,I)  = ZCETA(1,6,I)+ZCETA(2,6,I)+ZCETA(3,6,I)+ZCETA(4,6,I)
-      ZETA(7,I)  = ZCETA(1,7,I)+ZCETA(2,7,I)+ZCETA(3,7,I)+ZCETA(4,7,I)
-      ZETA(8,I)  = ZCETA(1,8,I)+ZCETA(2,8,I)+ZCETA(3,8,I)+ZCETA(4,8,I)
-      ZETA(9,I)  = ZCETA(1,9,I)+ZCETA(2,9,I)+ZCETA(3,9,I)
-      ZETA(10,I) = ZCETA(1,10,I)+ZCETA(2,10,I)+ZCETA(3,10,I)
-      ZETA(11,I) = ZCETA(1,11,I)+ZCETA(2,11,I)+ZCETA(3,11,I) &
-                  +ZCETA(4,11,I)+ZCETA(5,11,I)+ZCETA(6,11,I)
-      ZETA(12,I) = ZCETA(1,12,I)
-      ZETA(13,I) = ZCETA(1,13,I)+ZCETA(2,13,I)+ZCETA(3,13,I)+ZCETA(4,13,I)
-      ZETA(14,I) = ZCETA(1,14,I)+ZCETA(2,14,I)
-      ZETA(15,I) = ZCETA(1,15,I)+ZCETA(2,15,I)+ZCETA(3,15,I) &
-                  +ZCETA(4,15,I)+ZCETA(5,15,I)
-!
-    ENDDO ! bottom of airglow loop
-!
-!
+
+  ZCETA(1,1,:) = B(39) * AGLW(3,3,:)
+  ZCETA(2,1,:) = B(40) * A(10) * P(8,:) / L(8,:)
+
+  ZCETA(1,2,:) = B(38) * B(36) * RN2EI(:)
+  ZCETA(2,2,:) = B(38) * PHOTOI(3,3,:)
+  ZCETA(3,2,:) = G(2,:) * DEN(5,:)
+
+  ZCETA(1,3,:) = A(1) * B(27) * PHOTOD(1,3,:) / L(10,:)
+  ZCETA(2,3,:) = A(1) * B(27) * PHOTOI(6,3,:) / L(10,:)
+  ZCETA(3,3,:) = A(1) * B(25) * RN2ED(:) / L(10,:)
+  ZCETA(4,3,:) = A(1) * B(16) * B(15) * RN2EI(:) / L(10,:)
+  ZCETA(5,3,:) = A(1) * B(3)  * KZ(22,:) * DEN(7,:) * E(:) /L(10,:)
+  ZCETA(6,3,:) = A(1) * B(4)  * KZ(23,:) * DEN(5,:) * E(:) /L(10,:)
+  ZCETA(7,3,:) = A(1) * B(5)  * KZ(3,:)  * DEN(5,:) * ZO(:) /L(10,:)
+  ZCETA(8,3,:) = A(1) * B(29) * KZ(33,:) * DEN(9,:) * ZO(:) /L(10,:)
+  ZCETA(9,3,:) = A(1) * A(12) * DEN(9,:) / L(10,:)
+
+  ZCETA(1,4,:) = A(5) * AGLW(2,1,:) / L(11,:)
+  ZCETA(2,4,:) = A(5) * BZ(1,:)*KZ(24,:) * DEN(6,:) * E(:)  /L(11,:)
+  ZCETA(3,4,:) = A(5) * B(18) * KZ(26,:) * DEN(8,:) * ZO(:) /L(11,:)
+  ZCETA(4,4,:) = A(5) * B(33) * KZ(37,:) * DEN(6,:) * ZNS(:)/L(11,:)
+  ZCETA(5,4,:) = A(5) * B(34) * KZ(31,:) * DEN(10,:)* ZNO(:)/L(11,:)
+  ZCETA(6,4,:) = PHOTOD(2,2,:) / L(11,:)
+
+  ZCETA(1,5,:) = A(2) * AGLW(1,1,:) / L(12,:)
+  ZCETA(2,5,:) = A(2) * KZ(28,:) * E(:)  * ZO(:) / L(12,:)
+  ZCETA(3,5,:) = A(2) * B(2)  * KZ(24,:) * DEN(6,:)  * E(:)/L(12,:)
+  ZCETA(4,5,:) = A(2) * B(6)  * KZ(5,:)  * DEN(10,:) *ZO2(:)/L(12,:)
+  ZCETA(5,5,:) = A(2) * B(20) * KZ(6,:)  * DEN(10,:) * ZO(:)/L(12,:)
+  ZCETA(6,5,:) = A(2) * B(17) * KZ(25,:) * DEN(4,:) * ZO2(:)/L(12,:)
+  ZCETA(7,5,:) = A(2) * B(7)  * KZ(15,:) * DEN(2,:)  * ZO(:)/L(12,:)
+  ZCETA(8,5,:) = A(2) * SRCED(:) / L(12,:)
+  ZCETA(9,5,:) = A(2) * PHOTOD(1,2,:) / L(12,:)
+  ZCETA(10,5,:)= A(2) * A(5)  * DEN(11,:) / L(12,:)
+
+  ZCETA(1,6,:) = A(8) * (PHOTOI(3,1,:)+B(41)*PHOTOI(5,1,:)) / L(1,:)
+  ZCETA(2,6,:) = A(8) * B(30) * PHOTOI(4,2,:) / L(1,:)
+  ZCETA(3,6,:) = A(8) * B(9) * OEI(:) / L(1,:)
+  ZCETA(4,6,:) = A(8) * B(12) * O2EI(:) / L(1,:)
+
+  ZCETA(1,7,:) = A(12) * B(28) * PHOTOD(1,3,:) / L(9,:)
+  ZCETA(2,7,:) = A(12) * B(28) * PHOTOI(6,3,:) / L(9,:)
+  ZCETA(3,7,:) = A(12) * B(26) * RN2ED(:) / L(9,:)
+  ZCETA(4,7,:) = A(12) * B(23) * KZ(23,:) * DEN(5,:) * E(:) / L(9,:)
+
+  ZCETA(1,8,:) = A(11) * B(28) * PHOTOD(1,3,:) / L(9,:)
+  ZCETA(2,8,:) = A(11) * B(28) * PHOTOI(6,3,:) / L(9,:)
+  ZCETA(3,8,:) = A(11) * B(26) * RN2ED(:) / L(9,:)
+  ZCETA(4,8,:) = A(11) * B(23) * KZ(23,:) * DEN(5,:) * E(:) / L(9,:)
+
+  ZCETA(1,9,:) = AGLW(5,1,:)
+  ZCETA(2,9,:) = KZ(41,:) * DEN(3,:) * E(:)
+  ZCETA(3,9,:) = B(49) * KZ(43,:) * OMINUS(:) * DEN(3,:)
+
+  ZCETA(1,10,:) = AGLW(6,1,:)
+  ZCETA(2,10,:) = AGLW(7,1,:)
+  ZCETA(3,10,:) = B(44) * AGLW(8,1,:)
+   
+  ZCETA(1,11,:) = A(6) * (PHOTOI(2,1,:)+B(42)*PHOTOI(5,1,:))/ L(2,:)
+  ZCETA(2,11,:) = A(6) * B(31) * PHOTOI(4,2,:) / L(2,:)
+  ZCETA(3,11,:) = A(6) * B(10) * OEI(:) / L(2,:)
+  ZCETA(4,11,:) = A(6) * B(13) * O2EI(:) / L(2,:)
+  ZCETA(5,11,:) = A(6) * B(8)  * KZ(18,:) * DEN(1,:) * E(:) / L(2,:)
+  ZCETA(6,11,:) = A(6) * A(8)  * DEN(1,:) / L(2,:)
+
+  ZCETA(1,12,:) = AGLW(4,3,:) * B(48)
+
+  ZCETA(1,13,:) = AGLW(3,1,:)
+  ZCETA(2,13,:) = AGLW(5,1,:)
+  ZCETA(3,13,:) = KZ(41,:) * DEN(3,:) * E(:)
+  ZCETA(4,13,:) = B(49) * KZ(43,:) * OMINUS(:) * DEN(3,:)
+
+  ZCETA(1,14,:) = B(46)*PHOTOI(6,3,:)
+  ZCETA(2,14,:) = B(47)*B(15)*RN2EI(:)
+   
+  ZCETA(1,15,:) = AGLW(4,1,:)
+  ZCETA(2,15,:) = AGLW(6,1,:)
+  ZCETA(3,15,:) = AGLW(7,1,:)
+  ZCETA(4,15,:) = B(44) * AGLW(8,1,:)
+  ZCETA(5,15,:) = KZ(45,:) * DEN(3,:) * E(:)
+   
+   
+
+  ZETA(1,:) = ZCETA(1,1,:)+ZCETA(2,1,:)
+  ZETA(2,:) = ZCETA(1,2,:)+ZCETA(2,2,:)+ZCETA(3,2,:)
+  ZETA(3,:) = ZCETA(1,3,:)+ZCETA(2,3,:)+ZCETA(3,3,:)+ZCETA(4,3,:)+ZCETA(5,3,:)+ZCETA(6,3,:)+ZCETA(7,3,:)+ZCETA(8,3,:)+ZCETA(9,3,:)
+  ZETA(4,:) = ZCETA(1,4,:)+ZCETA(2,4,:)+ZCETA(3,4,:)+ZCETA(4,4,:)+ZCETA(5,4,:)+ZCETA(6,4,:)
+  ZETA(5,:)  = ZCETA(1,5,:)+ZCETA(2,5,:)+ZCETA(3,5,:)+ZCETA(4,5,:)+ZCETA(5,5,:)+ZCETA(6,5,:) &
+              +ZCETA(7,5,:)+ZCETA(8,5,:)+ZCETA(9,5,:)+ZCETA(10,5,:)
+              
+  ZETA(6:8,:) = sum(ZCETA(1:4,6:8,:),1)
+ 
+  ZETA(9:10,:) = sum(ZCETA(1:3,9:10,:),1)
+  
+  ZETA(11,:) = ZCETA(1,11,:)+ZCETA(2,11,:)+ZCETA(3,11,:)+ZCETA(4,11,:)+ZCETA(5,11,:)+ZCETA(6,11,:)
+  ZETA(12,:) = ZCETA(1,12,:)
+  ZETA(13,:) = ZCETA(1,13,:)+ZCETA(2,13,:)+ZCETA(3,13,:)+ZCETA(4,13,:)
+  ZETA(14,:) = ZCETA(1,14,:)+ZCETA(2,14,:)
+  ZETA(15,:) = ZCETA(1,15,:)+ZCETA(2,15,:)+ZCETA(3,15,:)+ZCETA(4,15,:)+ZCETA(5,15,:)
+
+
 ! Calculate vertical column brightnesses:
 !
     DO I=1,JMAX
@@ -783,20 +741,14 @@
           DZ = (ZZ(I+1) - ZZ(I-1)) / 2.0
         ENDIF
       ENDIF
-      DO IW=1,NW
-        VCB(IW) = VCB(IW) + ZETA(IW,I) * DZ
-      ENDDO
+  
+    VCB(:) = VCB(:) + ZETA(:,I) * DZ
+  
     ENDDO
-!
-!
+
 ! Convert brightnesses to Rayleighs:
-!
-    DO IW=1,NW
-      VCB(IW) = VCB(IW) / 1.E6
-    ENDDO
-!
-!
-    RETURN
-!
+  VCB(:) = VCB(:) / 1.E6
+ 
+
   END SUBROUTINE GCHEM
 

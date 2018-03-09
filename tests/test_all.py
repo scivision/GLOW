@@ -60,8 +60,7 @@ def test_pythonglow():
     sim = glowiono.runglowaurora(params)
 
     assert_allclose(sim.sza,81.09193)
-    print(sim['ver'].loc[120,'5577'])
-    assert_allclose(sim['ver'].loc[120,'5577'], 277.558258,rtol=0.001)
+    assert_allclose(sim['zeta'].loc[120,'5577'], 277.558258,rtol=0.001)
 
 
 def test_egrid_maxt():

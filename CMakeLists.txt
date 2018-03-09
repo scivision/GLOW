@@ -4,7 +4,7 @@ project(glow Fortran)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ..)
 
-add_compile_options(-O3 -g)
+add_compile_options(-O0 -g)
 
 if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Intel")
     add_compile_options(-debug full -traceback -fpe-all=0 -check all)
