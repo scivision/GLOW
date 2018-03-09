@@ -201,7 +201,7 @@
     integer,parameter :: nr=50
     real,parameter :: re=6.37E8
 !
-    real ::   A(NR), B(NR), BZ(NR,JMAX), G(NR,JMAX), KZ(NR,JMAX), &
+    real ::   A(NR), BZ(NR,JMAX), G(NR,JMAX), KZ(NR,JMAX), &
               OEI(JMAX), O2EI(JMAX), RN2EI(JMAX), &
               OPI(JMAX), O2PI(JMAX), RN2PI(JMAX), &
               RN2ED(JMAX), SRCED(JMAX), P(NEX,JMAX), L(NEX,JMAX), OMINUS(JMAX), &
@@ -209,16 +209,16 @@
               QQ(JMAX), RR(JMAX), SS(JMAX), TT(JMAX), UU(JMAX), &
               VV(JMAX), WW(JMAX), XX(JMAX)
     real ::   gh,dz,tatomi,alphaef,toti
-    integer :: i,iw,ic,ix,n,j200,iter
+    integer :: i,iw,j200,iter
 !
     DATA A/ 1.07E-5, 0.00585, 0.00185, 0.0450, 1.0600, 9.7E-5, 0.0479, 0.1712, 0.0010, 0.7700, &
             0.00540, 0.07900,     0.0,    0.0,    0.0,     0.0,   0.0,    0.0,    0.0,    0.0, &
             30*0.0 /
-    DATA B/ 0.07, 1.20, 0.76, 1.85, 1.00, 0.10, 0.50, 0.81, 0.20, 0.32, &
-            0.48, 0.10, 0.10, 0.10, 0.16, 0.50, 0.30, 0.19, 0.00, 0.10, &
-            0.43, 0.51, 0.10, 0.60, 0.54, 0.44, 0.80, 0.20, 1.00, 0.33, &
-            0.33, 0.34, 0.21, 0.20, 0.10, 0.11, 0.65, 0.20, 0.24, 0.02, &
-            0.18, 0.72, 0.75, 0.10, 0.00, 0.05, 0.02, 0.70, 0.54, 0.00  /
+    real,parameter :: B(*) = [0.07, 1.20, 0.76, 1.85, 1.00, 0.10, 0.50, 0.81, 0.20, 0.32, &
+                              0.48, 0.10, 0.10, 0.10, 0.16, 0.50, 0.30, 0.19, 0.00, 0.10, &
+                              0.43, 0.51, 0.10, 0.60, 0.54, 0.44, 0.80, 0.20, 1.00, 0.33, &
+                              0.33, 0.34, 0.21, 0.20, 0.10, 0.11, 0.65, 0.20, 0.24, 0.02, &
+                              0.18, 0.72, 0.75, 0.10, 0.00, 0.05, 0.02, 0.70, 0.54, 0.00]
 !
 !
     IF (KCHEM .EQ. 0) RETURN
@@ -343,13 +343,14 @@
 !
 !
 ! Find level below which electron density will be calculated:
-!
-    IF (KCHEM .GE. 4) THEN
+    J200 = 0
+    IF (KCHEM >= 4) THEN
       DO I=JMAX,1,-1
-        IF (ZZ(I) .GT. 2.0001E7) J200=I-1
+        IF (ZZ(I) > 2.0001E7) then
+            J200=I-1
+            exit
+        endif
       ENDDO
-    ELSE
-      J200=0
     ENDIF
 !
 !
