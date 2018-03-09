@@ -110,14 +110,13 @@ module readtgcm
 ! must be called before this is called.
 !
 ! Args:
-    character(len=*),intent(in) :: ncfile ! file path
+    character(*),intent(in) :: ncfile ! file path
     integer,intent(in) :: itime           ! time index to read
 !
 ! Local:
-    integer :: n,istat,ncid,k,i,ndims
-    integer :: id,idv_lon,idv_lat,idv_lev,idv_ilev,idv_time
+    integer :: n,istat,ncid,ndims
+    integer :: id
     character(len=1024) :: msg
-    character(len=NF90_MAX_NAME) :: varname
     integer :: iyear1(1),iday1(1)
     real :: ut1(1)
     real,allocatable,save :: f3d(:,:,:) ! global 3d field (lon,lat,lev)
@@ -169,7 +168,7 @@ module readtgcm
       ut = ut1(1)
 
       istat = nf90_inq_varid(ncid,'mtime',id)
-      istat = nf90_get_var(ncid,id,mtime,(/1,itime/),(/3,1/))
+      istat = nf90_get_var(ncid,id,mtime,[1,itime],[3,1])
 
       write(error_unit,"(/,'read_tgcm: itime=',i4,' ntime=',i4,' iyear=',i5,' iday=',i4,' ut=',f8.2,' mtime=',3i4)") &
         itime,ntime,iyear,iday,ut,mtime

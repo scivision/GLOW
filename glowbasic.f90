@@ -34,9 +34,9 @@ program glowbasic
   use, intrinsic:: iso_fortran_env, only: error_unit
 
   use cglow,only: jmax,nbins,lmax,nmaj,nei,nex,nw,nc,nst, idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec, &
-    iscale,jlocal,kchem,xuvfac, sza,dip,efrac,ierr, zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte, &
-    ener,del,phitop,wave1,wave2,sflux,pespec,sespec,uflx,dflx,sion, photoi,photod,phono,aglw,tei,tpi,tir,&
-    ecalc,zxden,zeta,zceta,zlbh, cglow_init, data_dir
+    iscale,jlocal,kchem,xuvfac,  zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte, &
+    ener,del,phitop,tir,&
+    ecalc,zxden,zeta, cglow_init, data_dir
 
   implicit none
 
@@ -46,11 +46,9 @@ program glowbasic
   real,allocatable :: zun(:), zvn(:)          ! neutral wind components (not in use)
   real,allocatable :: pedcond(:), hallcond(:) ! Pederson and Hall conductivities in S/m (mho)
   real,allocatable :: outf(:,:)               ! iri output (11,jmax)
-  real :: rz12,stl,fmono,emono
-  real :: d(8), t(2), oarr(30)
-  integer :: l,j,jj,ijf,jmag,iday,mmdd,i,ii,n,k,ix,itail
+  real :: stl,fmono,emono
+  integer :: j,ii,itail
   integer :: instance,iostatus
-  logical :: jf(12)
   
   data_dir    = 'data/'
 
@@ -135,8 +133,8 @@ program glowbasic
              "Ne(out)  Ionrate      O+       O2+      NO+       N(2D)    Pederson   Hall')")
     write(error_unit,"(1x,0p,f5.1,f6.0,1p,12e10.2)") (z(j),ztn(j),zo(j),zn2(j),zno(j),ze(j), &
       ecalc(j),tir(j),zxden(3,j),zxden(6,j),zxden(7,j),zxden(10,j),pedcond(j),hallcond(j),j=1,jmax)
-    write(error_unit,"('   Z      3371    4278    5200    5577    6300    7320   &
-             10400    3644    7774    8446    3726    LBH     1356    1493    1304')")
+    write(error_unit,"('   Z      3371    4278    5200    5577    6300    7320   "//&
+             "10400    3644    7774    8446    3726    LBH     1356    1493    1304')")
     write(error_unit,"(1x,f5.1,15f8.2)")(z(j),(zeta(ii,j),ii=1,15),j=1,jmax)
 
   enddo

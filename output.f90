@@ -99,7 +99,7 @@ module output
   character(len=*),intent(in) :: ncfile,tgcm_ncfile
 !
 ! Local:
-  integer :: istat,id,idv
+  integer :: istat,idv
   integer :: id_lon, id_lat, id_lev, id_nex, id_nw, id_nc
   integer :: idv_lon,idv_lat,idv_lev
   integer :: idv_idate,idv_ut,idv_f107a,idv_f107,idv_f107p,idv_ap

@@ -42,7 +42,7 @@ program glowdriver
   use cglow,only: iscale,jlocal,kchem,xuvfac
   use cglow,only: sza,dip,efrac,ierr
   use cglow,only: zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte
-  use cglow,only: ener,del,phitop,wave1,wave2,sflux,pespec,sespec,uflx,dflx,sion
+  use cglow,only: ener,del,phitop,sflux,pespec,sespec,uflx,dflx,sion
   use cglow,only: photoi,photod,phono,aglw,ecalc,zxden,zeta,zceta,zlbh
   use cglow,only: data_dir
 
