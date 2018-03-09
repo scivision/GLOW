@@ -82,14 +82,35 @@ def runglowaurora(params:dict, z_km:np.ndarray=None) -> xarray.Dataset:
 #%% (3) collect outputs
 
     lamb=[3371, 4278, 5200, 5577, 6300, 7320, 10400, 3466, 7774, 8446, 3726,
-          'LBH', 1356,1493,1304]
-    products=['nO+(2P)','nO+(2D)','nO+(4S)','nN+','nN2+','nO2+','nNO+','nO','nO2','nN2','nNO']
+          'LBH', 1356,1493,1304]  # same for ZETA and ZCETA
+    ions=['nO+(2P)','nO+(2D)','nO+(4S)','nN+','nN2+','nO2+','nNO+','nO','nO2','nN2','nNO']
+    neut=['O','O2','N2']
 
     sim = xarray.Dataset()
-
-    sim['ver'] = xarray.DataArray(glowfort.cglow.zeta.T,
+# %%  array of volume emission rates at each altitude; cm-3 s-1:
+    sim['zeta'] = xarray.DataArray(glowfort.cglow.zeta.T,
                         dims=['z_km','wavelength_nm'],
                         coords={'z_km':z_km, 'wavelength_nm':lamb})
+# %% array of contributions to each v.e.r at each alt; cm-3 s-1   Nalt x Nwavelength x Nprocess
+    sim['zceta'] = xarray.DataArray(glowfort.cglow.zceta.T, # See Glow.txt.
+                       dims=['z_km','wavelength_nm','process'],
+                       coords={'z_km':z_km, 'wavelength_nm':lamb,
+                               'process':range(glowfort.cglow.zceta.T.shape[2])})
+# %% electron impact ionization rates calculated by ETRANS; cm-3 s-1
+    sim['sion'] = xarray.DataArray(glowfort.cglow.sion.T,
+                       dims=['z_km','neutral_species'],
+                       coords={'z_km':z_km,'neutral_species':neut})
+# %% total photoionization rate at each altitude, cm-3 s-1
+    sim['tpi'] = xarray.DataArray(glowfort.cglow.tpi,
+                       dims=['z_km'],coords={'z_km':z_km})
+# %% total electron impact ionization rate at each altitude, cm-3 s-1
+    sim['tei'] = xarray.DataArray(glowfort.cglow.tei,
+                       dims=['z_km'],coords={'z_km':z_km})
+# %% PESPEC photoelectron production rate at energy, altitude; cm-3 s-1
+    sim['pespec'] = xarray.DataArray(glowfort.cglow.pespec.T,
+                       dims=['z_km','eV'],
+                       coords={'z_km':z_km,'eV':ener})
+
 
 #    sim['photIon'] = xarray.DataArray(np.hstack((photI[:,None],ImpI[:,None],ecalc[:,None],ion)),
 #                               dims=['z_km','type'],

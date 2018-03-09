@@ -59,7 +59,7 @@ def _plotver(sim,params,supertitle):
     N = 0
     if 'phitop' in sim:
         N +=1
-    if 'ver' in sim:
+    if 'zeta' in sim:
         N +=2
     if not N:
         return
@@ -85,15 +85,15 @@ def _plotver(sim,params,supertitle):
         ax.set_ylim(1e-4,1e6)
         ax.grid(True)
 # %% ver visible
-    if not 'ver' in sim:
+    if not 'zeta' in sim:
         return
 
     ind= ['4278', '5200', '5577', '6300']
     N-=1
     ax = axs[N]
-    ax.plot(sim['ver'].loc[...,ind],
+    ax.plot(sim['zeta'].loc[...,ind],
             sim.z_km)
-    ax.set_xlabel('Volume Emission Rate')
+    ax.set_xlabel('Volume Emission Rate [cm$^{-3}$ s$^{-1}$]')
 
     _nicez(ax,params)
     ax.set_xscale('log')
@@ -106,7 +106,7 @@ def _plotver(sim,params,supertitle):
            'LBH','1493','1304']
     N-=1
     ax = axs[N]
-    ax.plot(sim['ver'].loc[...,ind],
+    ax.plot(sim['zeta'].loc[...,ind],
             sim.z_km)
     ax.set_xlabel('Volume Emission Rate')
     _nicez(ax,params)
@@ -142,30 +142,28 @@ def _plotdens(sim,params,supertitle):
 
 
 def _plotioniz(sim,params,supertitle):
-    if 'photIon' not in sim:
-        return
 
     fg = figure(figsize=(15,8))
-    axs = fg.subplots(1,2,sharey=True,)
+    axs = fg.subplots(1,2, sharey=True,)
     fg.suptitle(supertitle)
     fg.tight_layout(pad=3.2, w_pad=0.3)
 
-    ind=['photoIoniz','eImpactIoniz']
+
     ax = axs[0]
-    ax.plot(sim['photIon'].loc[:,ind],
-            sim.z_km)
-    ax.set_xlabel('ionization')
+    ax.plot(sim['tpi'], sim.z_km, label='PhotoIoniziation')
+    ax.plot(sim['tei'], sim.z_km, label='e$^-$ImpactIonization')
+
+    ax.set_xlabel('ionization [cm$^{-3}$ s$^{-1}$]')
     ax.set_xscale('log')
     ax.set_xlim(left=1e-1)
     _nicez(ax,params)
-    ax.legend(ind)
+    ax.legend(loc='best')
     ax.set_title('Photo and e$^-$ impact ionization')
     ax.set_ylabel('Altitude [km]')
-
+# %% electron impact ionization rates calculated by ETRANS; cm-3 s-1
     ind=['O','O2','N2']
     ax = axs[1]
-    ax.plot(sim['sion'].T,
-            sim.z_km)
+    ax.plot(sim['sion'], sim.z_km)
     ax.set_xscale('log')
     ax.set_xlim(1e-5,1e4)
     _nicez(ax,params)
@@ -220,7 +218,7 @@ def _plotconstit(sim,params,supertitle):
     fg = figure(figsize=(15,8))
     axs = fg.subplots(3,4,sharey=True)
     for ax,zc,i in zip(axs.ravel(),
-                       sim['zceta'].transpose('wavelength_nm','type','z_km'),
+                       sim['zceta'].transpose('wavelength_nm','process','z_km'),
                        sim.wavelength_nm):
         ax.plot(zc.T,zc.z_km)
         ax.set_xscale('log')
