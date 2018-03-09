@@ -1,5 +1,4 @@
-subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyz,Nz,pynw,pynbins,pyphi,pyverbose, &
-            pyzeta)
+subroutine glowbasic(yyddd,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyz,Nz,pynbins,pyphi,pyverbose)
 
 ! This software is part of the GLOW model.  Use is governed by the Open Source
 ! Academic Research License Agreement contained in the file glowlicense.txt.
@@ -40,13 +39,12 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyz
     ecalc,zxden,zeta, cglow_init, data_dir
 
   implicit none
-  
-  
-  integer, intent(in) :: pyidate,Nz,pynw,pynbins
+
+
+  integer, intent(in) :: yyddd,Nz,pynbins
   real, intent(in) ::pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyz(Nz),pyphi(pynbins,3)
   logical, intent(in) :: pyverbose
-  real, intent(out) ::  pyzeta(pynw,Nz)
-  
+
 
   character(*), parameter :: iri90_dir = 'data/iri90/'
 
@@ -56,12 +54,12 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyz
   real,allocatable :: outf(:,:)               ! iri output (11,jmax)
   real :: stl,fmono,emono
   integer :: j,ii,itail
-  
+
   data_dir    = 'data/'
   Jmax = Nz
-  
-  if (nz/=jmax.or.nw/=pynw.or.pynbins/=nbins) then
-    print*,'Nz,jmax',nz,jmax,'nw,pynw',nw,pynw,'pynbins,nbins',pynbins,nbins
+
+  if (nz/=jmax.or.pynbins/=nbins) then
+    print*,'Nz,jmax',nz,jmax,'nw',nw,'pynbins,nbins',pynbins,nbins
     error stop 'python dimension mismatch'
   endif
 
@@ -82,16 +80,16 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyz
   allocate(pedcond(jmax))
   allocate(hallcond(jmax))
   allocate(outf(11,jmax))
-  
+
 ! transfer data from Python
-   idate=pyidate; ut=pyut; glat=pyglat; glong=pyglong;
+   idate=yyddd; ut=pyut; glat=pyglat; glong=pyglong;
   f107a=pyf107a; f107=pyf107; f107p=pyf107p; ap=pyap; verbose = pyverbose
 
 ! Call CGLOW_INIT (module CGLOW) to set array dimensions and allocate use-associated variables:
 ! (This was formerly done using common blocks, including common block /cglow/.)
 !
   call cglow_init
-  
+
   z = pyz
   ener = pyphi(:,1); del = pyphi(:,2); phitop = pyphi(:,3)
 
@@ -127,9 +125,7 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyz
                     zxden(3,j), zxden(6,j), zxden(7,j), ztn(j), zti(j), zte(j), &
                     pedcond(j), hallcond(j))
     enddo
-    
-! transfer data to Python 
-  pyzeta=zeta
+
 
 ! Output section:
     if (verbose) then

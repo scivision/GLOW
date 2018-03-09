@@ -9,10 +9,10 @@ import os
 import logging
 from datetime import datetime
 from itertools import chain
-from numpy import array,zeros,float32,log,isclose,nan
+from numpy import array,zeros,float32,isclose,nan
 from numpy.testing import assert_allclose,run_module_suite
 #
-from sciencedates import datetime2yd,datetime2gtd
+from sciencedates import datetime2yd
 #
 import glow
 import glowiono
@@ -60,7 +60,9 @@ def test_pythonglow():
     sim = glowiono.runglowaurora(params)
 
     assert_allclose(sim.sza,81.09193)
-    assert_allclose(sim['ver'].loc[120,'5577'], 277.55826)
+    print(sim['ver'].loc[120,'5577'])
+    assert_allclose(sim['ver'].loc[120,'5577'], 277.558258,rtol=0.001)
+
 
 def test_egrid_maxt():
     ener,dE = glow.egrid()
@@ -98,7 +100,7 @@ def test_solzen():
 
 def test_snoemint():
     if msise00 is not None:
-        densd,tempd = rungtd1d(dtime,z,glat,glon,f107a,f107,[ap]*7)
+        densd,tempd = msise00.rungtd1d(dtime,z,glat,glon,f107a,f107,[ap]*7)
     # (nighttime background ionization)
         print(tempd)
         znoint = glow.snoemint(dtime.strftime('%Y%j'),glat,glon,f107,ap,z,

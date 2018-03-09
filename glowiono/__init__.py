@@ -76,9 +76,9 @@ def runglowaurora(params:dict, z_km:np.ndarray=None) -> xarray.Dataset:
     phi = np.stack((ener,dE,phitop), 1)   # Nalt x 3
     assert phi.shape[1] == 3
 #%% (2) msis,iri,glow model
-    zeta = glowfort.glowbasic(yeardoy,utsec,params['glat'],params['glon']%360,
+    glowfort.glowbasic(yeardoy,utsec,params['glat'],params['glon']%360,
                               params['f107a'],params['f107'],params['f107p'],params['Ap'],
-                              z_km,pynw=15,pyphi=phi,pyverbose=False,)
+                              z_km,pyphi=phi,pyverbose=False,)
 #%% (3) collect outputs
 
     lamb=[3371, 4278, 5200, 5577, 6300, 7320, 10400, 3466, 7774, 8446, 3726,
@@ -87,7 +87,7 @@ def runglowaurora(params:dict, z_km:np.ndarray=None) -> xarray.Dataset:
 
     sim = xarray.Dataset()
 
-    sim['ver'] = xarray.DataArray(zeta.T,
+    sim['ver'] = xarray.DataArray(glowfort.cglow.zeta.T,
                         dims=['z_km','wavelength_nm'],
                         coords={'z_km':z_km, 'wavelength_nm':lamb})
 

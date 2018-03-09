@@ -4,11 +4,11 @@ use cglow, only: nw, jmax,verbose,nbins
 
 implicit none
 
-integer,parameter :: idate=16355      
+integer,parameter :: yyddd=16355
 real,parameter :: ut=0,glat=80,glong=0,f107a=70,f107=70,f107p=70,ap=4,ef=1,ec=2000
 real :: phi(nbins,3)
 
-real, allocatable :: z(:),zeta(:,:)
+real, allocatable :: z(:)
 
 integer :: argc,i
 character(80) :: argv
@@ -21,17 +21,17 @@ do i=1,argc
     case ('-v','-d','--verbose','--debug')
       verbose=.true.
     case default
-   
+
   end select
 end do
 
 
 jmax=102
-allocate(z(jmax), zeta(nw,jmax))
+allocate(z(jmax))
 ! altitude grid
 z = [80.,  81.,  82.,  83.,  84.,  85.,  86.,  87.,  88.,  89., &
      90.,  91.,  92.,  93.,  94.,  95.,  96.,  97.,  98.,  99., &
-    100., 101., 102., 103., 104., 105., 106., 107., 108., 109., &    
+    100., 101., 102., 103., 104., 105., 106., 107., 108., 109., &
     110.,111.5, 113.,114.5, 116., 118., 120., 122., 124., 126., &
     128., 130., 132., 134., 137., 140., 144., 148., 153., 158., &
     164., 170., 176., 183., 190., 197., 205., 213., 221., 229., &
@@ -45,8 +45,7 @@ call egrid(phi(:,1),phi(:,2)) ! energy bins
 call maxt (ef,ec,phi(:,1),phi(:,2),nbins,0,0,0,phi(:,3)) ! precipitation
 
 
-call glowbasic(idate,ut,glat,glong,f107a,f107,f107p,ap, z,jmax,nw,nbins,phi,verbose,&
-              zeta)
+call glowbasic(yyddd,ut,glat,glong,f107a,f107,f107p,ap, z,jmax,nbins,phi,verbose)
 
 
 end program
