@@ -36,27 +36,22 @@ program glowdriver
 
   use mpi
 
-  use cglow,only: cglow_init      ! subroutine to allocate use-associated variables
-  use cglow,only: jmax,nbins,lmax,nmaj,nei,nex,nw,nc,nst
-  use cglow,only: idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec
-  use cglow,only: iscale,jlocal,kchem,xuvfac
-  use cglow,only: sza,dip,efrac,ierr
-  use cglow,only: zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte
-  use cglow,only: ener,del,phitop,sflux,pespec,sespec,uflx,dflx,sion
-  use cglow,only: photoi,photod,phono,aglw,ecalc,zxden,zeta,zceta,zlbh
-  use cglow,only: data_dir
+   use cglow,only: jmax,nbins,lmax,nmaj,nei,nex,nw,nc,nst, idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec, &
+    iscale,jlocal,kchem,xuvfac,  zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte, &
+    ener,del,phitop,ecalc,zxden,zeta, cglow_init, data_dir,&
+    dip, efrac, ierr,sza,zlbh,zceta
+    
 
   use readtgcm,only: read_tgcm           ! subroutine to read tgcm history file
   use readtgcm,only: read_tgcm_coords    ! subroutine to read tgcm history coordinates
   use readtgcm,only: find_mtimes         ! subroutine to find model times on history file
   use readtgcm,only: nlon_tgcm=>nlon, glon_tgcm=>glon
   use readtgcm,only: nlat_tgcm=>nlat, glat_tgcm=>glat
-  use readtgcm,only: nlev_tgcm=>nlev
+!  use readtgcm,only: nlev_tgcm=>nlev
   use readtgcm,only: iyear_tgcm=>iyear,iday_tgcm=>iday,ut_tgcm=>ut
   use readtgcm,only: f107_tgcm=>f107d,f107a_tgcm=>f107a,hpower
-  use readtgcm,only: alfacusp=>alfac,ecusp=>ec,alfadrizzle=>alfad,edrizzle=>ed
-  use readtgcm,only: eflux,nflux,alfa,drizzle,cusp
-  use readtgcm,only: zg,tn,un,vn,o2,o1,n2,n4s,n2d,no,ti,te,ne
+!  use readtgcm,only: alfacusp=>alfac,ecusp=>ec,alfadrizzle=>alfad,edrizzle=>ed
+  use readtgcm,only: eflux,alfa
   use readtgcm,only: mxtimes
 
   use output,only: output_init    ! subroutine to allocate output arrays
@@ -83,16 +78,15 @@ program glowdriver
   real,allocatable :: outf(:,:)       ! iri output (11,jmax)
   real,allocatable :: recbuf(:,:)     ! receive buffer for MPI gather
   real :: utstart,utstep,utstop
-  real :: rz12,stl,fmono,emono,kp
-  real :: d(8), t(2), sw(25), oarr(30)
+  real :: stl,fmono,emono,kp
   integer nproc,itask,mpierr,lat0,lat1,size2d,size3d,sizeb
-  integer :: l,j,jj,ijf,jmag,iday,mmdd,i,ii,n,k,ix,itail,m
+  integer :: l,j,i,k,ix,itail
   integer :: nlat_msis, nlon_msis  ! number of lats and lons in grid for MSIS/IRI runs
   integer :: start_mtime(3)        ! model start time (day,hour,minute)
   integer :: stop_mtime(3)         ! model stop time (day,hour,minute)
   integer :: indate,itime,ntimes,mtimes(3,mxtimes),itimes(mxtimes)
-  logical :: tgcm, first, jf(12)
-  data sw/25*1./, first/.true./
+  logical :: tgcm, first
+  data first/.true./
 
   namelist /glow_input/ &
     indate,utstart,utstep,utstop,nlat_msis,nlon_msis,f107a,f107,f107p,ap, &

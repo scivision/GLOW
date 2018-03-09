@@ -66,31 +66,33 @@ module readtgcm
 !   iday     Model day, ddd
 !   ut       Model universal time, hours
 
-  use iso_fortran_env, only: error_unit
+  use iso_fortran_env, only: output_unit,error_unit
   use netcdf
   implicit none
+  private
 
-  integer :: iyear,iday
-  real :: ut,dlev
+  integer,public :: iyear,iday
+  real,public :: ut,dlev
 !
 ! Grid dimensions and coordinates:
 !
-  integer :: nlon,nlat,nlev,nilev          ! grid dimensions
+  integer, public :: nlon,nlat,nlev,nilev          ! grid dimensions
   integer :: ntime                         ! number of histories on file
-  real,allocatable,dimension(:),save :: &  ! grid coordinates
+  real,allocatable,dimension(:),save,public :: &  ! grid coordinates
     glon,glat,zlev,zilev
-  integer,parameter :: mxtimes=100
+  integer,parameter,public :: mxtimes=100
 !
 ! 2d and 3d global fields at a single time (history):
 !
-  real,allocatable,dimension(:,:,:),save :: & ! 3d fields (nlon,nlat,nlev)
+  real,allocatable,dimension(:,:,:),save,public :: & ! 3d fields (nlon,nlat,nlev)
     tn,un,vn,o2,o1,n2,he,no,ti,te,z,zg,ne,n2d,n4s
-  real,allocatable,dimension(:,:),save :: & ! 2d fields (nlon,nlat)
-    cusp,drizzle,alfa,nflux,eflux
+    
+  real,allocatable,dimension(:,:),save:: nflux ! 2d fields (nlon,nlat)
+  real,allocatable,dimension(:,:),save,public:: alfa, cusp,drizzle,eflux
 !
 ! Scalars (1d in time):
 !
-  real,allocatable,dimension(:),save :: &     ! scalars (ntime)
+  real,allocatable,dimension(:),save,public :: &     ! scalars (ntime)
     f107d,f107a,hpower,e1,e2,h1,h2,alfac,ec,alfad,ed
 
   integer,parameter :: nf=20     ! number of fields to read
@@ -99,6 +101,9 @@ module readtgcm
 ! Print to stdout flag:
 !
   integer,save :: iprint=1
+  
+
+  public:: read_tgcm, read_tgcm_coords, find_mtimes
 
   contains
 
@@ -116,7 +121,7 @@ module readtgcm
 ! Local:
     integer :: n,istat,ncid,ndims
     integer :: id
-    character(len=1024) :: msg
+    character(1024) :: msg
     integer :: iyear1(1),iday1(1)
     real :: ut1(1)
     real,allocatable,save :: f3d(:,:,:) ! global 3d field (lon,lat,lev)
@@ -135,11 +140,10 @@ module readtgcm
 
     istat = nf90_open(ncfile,NF90_NOWRITE,ncid)
     if (istat /= NF90_NOERR) then
-      write(msg,"('Error opening file ',a)") trim(ncfile)
+      write(msg,"('Error opening file ',a)") ncfile
       call handle_ncerr(istat,trim(msg),1)
     else
-      if (iprint > 0) &
-      write(error_unit,"(/,'Opened file ',a)") trim(ncfile)
+      if (iprint > 0) print *,"Opened file", ncfile
     endif
 !
 ! Allocate arrays to read 2d and 3d spatial variables:
@@ -170,7 +174,7 @@ module readtgcm
       istat = nf90_inq_varid(ncid,'mtime',id)
       istat = nf90_get_var(ncid,id,mtime,[1,itime],[3,1])
 
-      write(error_unit,"(/,'read_tgcm: itime=',i4,' ntime=',i4,' iyear=',i5,' iday=',i4,' ut=',f8.2,' mtime=',3i4)") &
+      write(output_unit,"(/,'read_tgcm: itime=',i4,' ntime=',i4,' iyear=',i5,' iday=',i4,' ut=',f8.2,' mtime=',3i4)") &
         itime,ntime,iyear,iday,ut,mtime
 !
 ! Read vars at current history/time:
@@ -191,7 +195,7 @@ module readtgcm
               call handle_ncerr(istat,'Error from nf90_get_var',1)
             endif
             if (iprint > 0) &
-            write(error_unit,"('Read 3d var: itime=',i4,' n=',i4,' fld ',a,' id=',i4,' min,max=',2es12.4)") &
+            write(output_unit,"('Read 3d var: itime=',i4,' n=',i4,' fld ',a,' id=',i4,' min,max=',2es12.4)") &
               itime,n,trim(fnames(n)),id,minval(f3d(:,:,1:nlev-1)),maxval(f3d(:,:,1:nlev-1))
 !
 ! 2d var+time: assume (nlon,nlat):
@@ -204,7 +208,7 @@ module readtgcm
               call handle_ncerr(istat,'Error from nf90_get_var',1)
             endif
             if (iprint > 0) &
-            write(error_unit,"('Read 2d var: itime=',i4,' n=',i4,' fld ',a,' id=',i4,' min,max=',2es12.4)") &
+            write(output_unit,"('Read 2d var: itime=',i4,' n=',i4,' fld ',a,' id=',i4,' min,max=',2es12.4)") &
               itime,n,trim(fnames(n)),id,minval(f2d(:,:)),maxval(f2d(:,:))
           endif ! 2d or 3d var
 !
@@ -217,7 +221,7 @@ module readtgcm
               tn = f3d
               tn(:,:,nlev) = tn(:,:,nlev-1) 
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(tn),maxval(tn)
               found(n) = .true. 
             case('UN')
@@ -225,7 +229,7 @@ module readtgcm
               un = f3d
               un(:,:,nlev) = un(:,:,nlev-1) 
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(un),maxval(un)
               found(n) = .true. 
             case('VN')
@@ -233,42 +237,42 @@ module readtgcm
               vn = f3d
               vn(:,:,nlev) = vn(:,:,nlev-1) 
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(vn),maxval(vn)
               found(n) = .true. 
             case('O2')
               if (.not.allocated(o2)) allocate(o2(nlon,nlat,nlev))
               o2 = f3d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(o2),maxval(o2)
               found(n) = .true. 
             case('O1')
               if (.not.allocated(o1)) allocate(o1(nlon,nlat,nlev))
               o1 = f3d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(o1),maxval(o1)
               found(n) = .true. 
             case('N2')
               if (.not.allocated(n2)) allocate(n2(nlon,nlat,nlev))
               n2 = f3d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(n2),maxval(n2)
               found(n) = .true. 
             case('HE')
               if (.not.allocated(he)) allocate(he(nlon,nlat,nlev))
               he = f3d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(he),maxval(he)
               found(n) = .true. 
             case('NO')
               if (.not.allocated(no)) allocate(no(nlon,nlat,nlev))
               no = f3d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(no),maxval(no)
               found(n) = .true. 
             case('TI')
@@ -276,7 +280,7 @@ module readtgcm
               ti = f3d
               ti(:,:,nlev) = ti(:,:,nlev-1) 
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(ti),maxval(ti)
               found(n) = .true. 
             case('TE')
@@ -284,42 +288,42 @@ module readtgcm
               te = f3d
               te(:,:,nlev) = te(:,:,nlev-1) 
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(te),maxval(te)
               found(n) = .true. 
             case('NE')
               if (.not.allocated(ne)) allocate(ne(nlon,nlat,nlev))
               ne = f3d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(ne),maxval(ne)
               found(n) = .true. 
             case('Z')
               if (.not.allocated(z)) allocate(z(nlon,nlat,nlev))
               z = f3d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(z),maxval(z)
               found(n) = .true. 
             case('ZG')
               if (.not.allocated(zg)) allocate(zg(nlon,nlat,nlev))
               zg = f3d*1.e-5 ! cm->km
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(zg),maxval(zg)
               found(n) = .true. 
             case('N2D')
               if (.not.allocated(n2d)) allocate(n2d(nlon,nlat,nlev))
               n2d = f3d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(n2d),maxval(n2d)
               found(n) = .true. 
             case('N4S')
               if (.not.allocated(n4s)) allocate(n4s(nlon,nlat,nlev))
               n4s = f3d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(n4s),maxval(n4s)
               found(n) = .true. 
 !
@@ -329,35 +333,35 @@ module readtgcm
               if (.not.allocated(cusp)) allocate(cusp(nlon,nlat))
               cusp = f2d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(cusp),maxval(cusp)
               found(n) = .true. 
             case('DRIZZLE')
               if (.not.allocated(drizzle)) allocate(drizzle(nlon,nlat))
               drizzle = f2d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(drizzle),maxval(drizzle)
               found(n) = .true. 
             case('ALFA')
               if (.not.allocated(alfa)) allocate(alfa(nlon,nlat))
               alfa = f2d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(alfa),maxval(alfa)
               found(n) = .true. 
             case('NFLUX')
               if (.not.allocated(nflux)) allocate(nflux(nlon,nlat))
               nflux = f2d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(nflux),maxval(nflux)
               found(n) = .true. 
             case('EFLUX')
               if (.not.allocated(eflux)) allocate(eflux(nlon,nlat))
               eflux = f2d
               if (iprint > 0) &
-              write(error_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
+              write(output_unit,"('read_tgcm: Field ',a,' min,max=',2es12.4)") &
                 fnames(n),minval(eflux),maxval(eflux)
               found(n) = .true. 
 !
@@ -379,7 +383,7 @@ module readtgcm
         if (found(findx('O1')).and.found(findx('O2')).and.found(findx('HE'))) then
           n2 = 1.-o2-o1-he
           if (iprint > 0) &
-          write(error_unit,"('read_tgcm: Field N2 (1-O2-O-HE) min,max=',2es12.4)") &
+          write(output_unit,"('read_tgcm: Field N2 (1-O2-O-HE) min,max=',2es12.4)") &
             minval(n2),maxval(n2)
         else
           write(error_unit,"('>>> FATAL: N2 not found on the file, and at least one of')")
@@ -490,13 +494,13 @@ module readtgcm
       call denconv(n4s,14.,tn,o2mmr,o1mmr,n2mmr,hemmr,zlev,nlon,nlat,nlev)
 
       if (iprint > 0) then
-        write(error_unit,"('After denconv: O2 (cm3) min,max=',2es12.4)") minval(o2),maxval(o2)
-        write(error_unit,"('After denconv: O1 (cm3) min,max=',2es12.4)") minval(o1),maxval(o1)
-        write(error_unit,"('After denconv: N2 (cm3) min,max=',2es12.4)") minval(n2),maxval(n2)
-        write(error_unit,"('After denconv: HE (cm3) min,max=',2es12.4)") minval(he),maxval(he)
-        write(error_unit,"('After denconv: NO (cm3) min,max=',2es12.4)") minval(no),maxval(no)
-        write(error_unit,"('After denconv: N2D(cm3) min,max=',2es12.4)") minval(n2d),maxval(n2d)
-        write(error_unit,"('After denconv: N4S(cm3) min,max=',2es12.4)") minval(n4s),maxval(n4s)
+        write(output_unit,"('After denconv: O2 (cm3) min,max=',2es12.4)") minval(o2),maxval(o2)
+        write(output_unit,"('After denconv: O1 (cm3) min,max=',2es12.4)") minval(o1),maxval(o1)
+        write(output_unit,"('After denconv: N2 (cm3) min,max=',2es12.4)") minval(n2),maxval(n2)
+        write(output_unit,"('After denconv: HE (cm3) min,max=',2es12.4)") minval(he),maxval(he)
+        write(output_unit,"('After denconv: NO (cm3) min,max=',2es12.4)") minval(no),maxval(no)
+        write(output_unit,"('After denconv: N2D(cm3) min,max=',2es12.4)") minval(n2d),maxval(n2d)
+        write(output_unit,"('After denconv: N4S(cm3) min,max=',2es12.4)") minval(n4s),maxval(n4s)
       endif
 !
 ! Close the file:
@@ -506,7 +510,7 @@ module readtgcm
 
 !-----------------------------------------------------------------------
 
-      subroutine calczg(tn,o2,o1,n2,he,z,zg,glat,nlon,nlat,nlev,dlev)
+  subroutine calczg(tn,o2,o1,n2,he,z,zg,glat,nlon,nlat,nlev,dlev)
 
 !     use params_module,only: dz,glat
 !     use init_module,only: istep
@@ -606,7 +610,7 @@ module readtgcm
 !
 ! Find index in fnames(nf) that matches input name.
 !
-  character(len=*),intent(in) :: name
+  character(*),intent(in) :: name
   integer :: n    
   findx = 0
   do n=1,nf
@@ -641,7 +645,6 @@ module readtgcm
     character(len=1024) :: msg
     character(len=NF90_MAX_NAME) :: varname
     integer,allocatable,save :: mtime_file(:,:) ! (3,ntime)
-    integer :: mtime(3)
 !
 ! Init return values:
     find_mtimes = 0
@@ -675,7 +678,7 @@ module readtgcm
             mtime_file(2,i)==start_mtime(2).and. &
             mtime_file(3,i)==start_mtime(3)) then
           itime0 = i
-          write(error_unit,"('Found requested start_mtime ',3i4,' (history ',i4,' on the file).')") &
+          write(output_unit,"('Found requested start_mtime ',3i4,' (history ',i4,' on the file).')") &
             start_mtime,itime0
           exit 
         endif
@@ -700,7 +703,7 @@ module readtgcm
             mtime_file(2,i)==stop_mtime(2).and. &
             mtime_file(3,i)==stop_mtime(3)) then
           itime1 = i
-          write(error_unit,"('Found requested stop_mtime ',3i4,' (history ',i4,' on the file).')") &
+          write(output_unit,"('Found requested stop_mtime ',3i4,' (history ',i4,' on the file).')") &
             stop_mtime,itime1
           exit 
         endif
@@ -726,7 +729,7 @@ module readtgcm
 !
 ! Return values:
     find_mtimes = itime1-itime0+1 ! number of model times
-    write(error_unit,"('Number of model times to read = ',i4)") find_mtimes
+    write(output_unit,"('Number of model times to read = ',i4)") find_mtimes
     do i=itime0,itime1
       mtimes(:,i-itime0+1) = mtime_file(:,i) ! model times from start to stop
       itimes(i-itime0+1) = i                 ! file index of each model time
@@ -756,7 +759,7 @@ module readtgcm
       write(msg,"('Error opening file ',a)") trim(ncfile)
       call handle_ncerr(istat,trim(msg),1)
     else
-      write(error_unit,"(/,'Opened file ',a)") trim(ncfile)
+      write(output_unit,"(/,'Opened file ',a)") trim(ncfile)
     endif
 !
 ! Get number of times (histories) (length of unlimited variable):
@@ -803,7 +806,7 @@ module readtgcm
 !   write(error_unit,"('read_tgcm_coords: nilev=',i4,' zilev=',/,(8f10.3))") nilev,zilev
 !   write(error_unit,"('read_tgcm_coords: nilev=',i4,' zilev(nilev)=',f9.3,' zilev(1)=',f9.3,' dlev=',f9.3)") &
 !     nilev,zilev(nilev),zilev(1),dlev
-    write(error_unit,"('read_tgcm_coords: ntime=',i4,' nlon=',i4,' nlat=',i4,' nlev=',i4)") ntime,nlon,nlat,nlev
+    write(output_unit,"('read_tgcm_coords: ntime=',i4,' nlon=',i4,' nlat=',i4,' nlev=',i4)") ntime,nlon,nlat,nlev
 !
 ! Allocate and read 1d time-dependent variables (or, this could be done
 ! on a per-history basis below, reading into scalars instead of arrays
@@ -874,7 +877,7 @@ module readtgcm
 ! Handle a netcdf lib error:
 !
     integer,intent(in) :: istat,ifatal
-    character(len=*),intent(in) :: msg
+    character(*),intent(in) :: msg
 !
     write(error_unit,"(/72('-'))")
     write(error_unit,"('>>> Error from netcdf library:')")
