@@ -7,6 +7,8 @@ python:
 os:
   - linux
 
+env: FC=gfortran-6
+
 group: travis_latest
 
 git:
@@ -15,7 +17,7 @@ git:
 addons:
   apt:
     packages:
-      - gfortran
+      - gfortran-6
 
 before_install:
   # temporary for pip < 9.1
