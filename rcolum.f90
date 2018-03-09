@@ -24,6 +24,8 @@
 
 
     subroutine rcolum (chi, zz, zmaj, tn, zcol, zvcd, jmax, nmaj)
+    
+      use, intrinsic:: ieee_arithmetic
 
       implicit none
 
@@ -37,16 +39,15 @@
 
       integer :: i, j, k
       real :: zcg(nm), ghrg, ghz, tng
-      real,external :: chap
-
+      real :: chap
+      
+      tng = ieee_value(1.,ieee_quiet_nan)
+      zcg = ieee_value(1.,ieee_quiet_nan)
+      
       call vcd (zz, zmaj, zvcd, jmax, nmaj)
 
       if (chi >= 2.) then 
-        do i=1,nmaj
-          do j=1,jmax
-            zcol(i,j) = 1.0e30
-          enddo
-        enddo
+        zcol(:,:) = 1.0e30
         return
       endif
 
@@ -61,9 +62,7 @@
           ghrg=(re+zz(j))*sin(chi) 
           ghz=ghrg-re 
           if (ghz <= zz(1)) then
-            do i=1,nmaj
-              zcol(i,j) = 1.0e30
-            enddo
+            zcol(:,j) = 1.0e30
           else
             do k=1,j-1
               if (zz(k) <= ghz .and. zz(k+1) > ghz) then
@@ -82,8 +81,6 @@
         enddo
       endif
 
-      return 
-
     end subroutine rcolum
 
 !----------------------------------------------------------------------
@@ -95,15 +92,14 @@
       real,intent(in) :: chi, z, t
       integer,intent(in) :: i
 
-      integer,parameter ::  nmaj=3
       real,parameter :: pi=4.*atan(1.)
       real,parameter :: re=6.37e8
       real,parameter :: g=978.1
 
-      real :: am(nmaj), gr, hn, hg, hf, sqhf
-      real,external :: sperfc
+      real :: gr, hn, hg, hf, sqhf
+      real :: sperfc
 
-      data am/16., 32., 28./
+      real, parameter :: am(*) =[16., 32., 28.]
 
       gr=g*(re/(re+z))**2 
       hn=1.38e-16*t/(am(i)*1.662e-24*gr)
@@ -112,13 +108,11 @@
       sqhf=sqrt(hf) 
       chap=sqrt(0.5*pi*hg)*sperfc(sqhf) 
 
-      return
-
     end function chap
 
 !----------------------------------------------------------------------
 
-    real function sperfc(dummy) 
+    pure real function sperfc(dummy) 
 
       implicit none
 
@@ -130,8 +124,6 @@
       else
         sperfc=0.56498823/(0.06651874+dummy) 
       endif 
-
-      return 
 
     end function sperfc
 
