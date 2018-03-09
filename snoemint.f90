@@ -28,7 +28,7 @@
       real,intent(in) :: glat, glong, f107, ap, z(jmax), ztn(jmax)
       real,intent(out) :: zno(jmax)
 
-      real,parameter :: pi=3.1415926536
+      real,parameter :: pi=4.*atan(1.)
 
       integer :: iday, klat1, klat2, kz1, kz2, j
       real :: zg(16), xmlatno(33), zmno(33,16), zmnoi(16)

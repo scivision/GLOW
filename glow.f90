@@ -5,6 +5,7 @@
 ! For more information see the file glow.txt.
 
 ! Version 0.98, 1/2017
+! Version 0.981, 6/2017
 
 ! Stan Solomon, 1988, 1989, 1990, 1991, 1992, 1994, 2000, 2002, 2005, 2015, 2016
 !
@@ -128,7 +129,7 @@
 
       real :: zvcd(nmaj,jmax),xf,yf,zf,ff,dec,sdip,teflux
 
-      real,parameter :: pi=3.1415926536
+      real,parameter :: pi=4.*atan(1.)
       integer,save :: ifirst=1
       integer :: j,i,ist,n,iei
 

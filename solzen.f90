@@ -19,7 +19,7 @@ subroutine solzen (idate, ut, glat, glong, sza)
   real,intent(in) :: ut, glat, glong
   real,intent(out) :: sza
 
-  real,parameter :: pi=3.1415926536
+  real,parameter :: pi=4.*atan(1.)
   real :: rlat, rlong, sdec, srasn, gst, rh, cossza
 
   rlat = glat * pi/180.
@@ -46,7 +46,7 @@ subroutine suncor (idate, ut, sdec, srasn, gst)
   real,intent(in) :: ut
   real,intent(out) :: sdec, srasn, gst
 
-  real,parameter :: pi=3.1415926536
+  real,parameter :: pi=4.*atan(1.)
   real :: fday, dj, t, vl, g, slong, obliq, slp, sind, cosd
   integer :: iyr, iday
 
@@ -73,7 +73,7 @@ subroutine suncor (idate, ut, sdec, srasn, gst)
   sind=sin(obliq)*sin(slp)
   cosd=sqrt(1.-sind**2)
   sdec=atan(sind/cosd)
-  srasn=3.14159-atan2(1./tan(obliq)*sind/cosd,-cos(slp)/cosd)
+  srasn=pi-atan2(1./tan(obliq)*sind/cosd,-cos(slp)/cosd)
 
   return
 
