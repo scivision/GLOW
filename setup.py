@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 install_requires = ['numpy','xarray',
-                    'sciencedates']
+                    'sciencedates','gridaurora']
 tests_require=['pytest','nose','coveralls']
 # %%
 from setuptools import find_packages # enables develop
