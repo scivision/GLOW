@@ -1,3 +1,5 @@
+testdrv
+.cache
 *.out
 fort.12
 driver
