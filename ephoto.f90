@@ -89,16 +89,16 @@ subroutine ephoto
 
   real,parameter :: signo = 2.0e-18
   integer :: ifirst=1
-  integer :: l,n,k,i,j,m,m1,m2
+  integer :: l,n,k,i,j,m1,m2
   real :: aa,bb,fac,e1,e2,y,r1,r2
   character(len=1024) :: filepath
 
-  nnn = (/5,4,6/)
-  tpot(1:nst,1) = (/13.61, 16.93, 18.63, 28.50, 40.00,  0.00/)
-  tpot(1:nst,2) = (/12.07, 16.10, 18.20, 20.00,  0.00,  0.00/)
-  tpot(1:nst,3) = (/15.60, 16.70, 18.80, 30.00, 34.80, 25.00/)
-  auge = (/500.,500.,360./)
-  augl = (/24.,24.,33./)
+  nnn = [5,4,6]
+  tpot(1:nst,1) = [13.61, 16.93, 18.63, 28.50, 40.00,  0.00]
+  tpot(1:nst,2) = [12.07, 16.10, 18.20, 20.00,  0.00,  0.00]
+  tpot(1:nst,3) = [15.60, 16.70, 18.80, 30.00, 34.80, 25.00]
+  auge = [500.,500.,360.]
+  augl = [24.,24.,33.]
   bso2(1:12) = 0.
   bso2(13) = .01
   bso2(14) = .03
@@ -147,7 +147,7 @@ subroutine ephoto
     enddo
     close(1)
 
-    do l=1,lmax
+    do l=1,size(sigao)
       sigabs(1,l) = sigao(l)  * 1.e-18
       sigabs(2,l) = sigao2(l) * 1.e-18
       sigabs(3,l) = sigan2(l) * 1.e-18

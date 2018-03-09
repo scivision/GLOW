@@ -62,7 +62,7 @@ C
 C
       real ::   SIGI(NBINS), T12(NBINS), RATIO(NBINS), 
      |          EC(31,NMAJ), CC(31,NMAJ), CE(31,NMAJ), CI(31,NMAJ)
-      integer :: NNNI(NMAJ),NINN(NMAJ),NUM(NMAJ),NNN(NMAJ)
+      integer :: NINN(NMAJ),NUM(NMAJ),NNN(NMAJ)
       integer :: ij,iv,ii,i,k,j,i1,i2,i3,jy,kuk,kuk1,iee,kk,ie,ibz,ml,
      |  itmax
       real :: EX,FAC,WE,AE,GAMMA,T0,ETJ,DETJ,SIGG,ETA,FF,WAG,TMT,
@@ -508,21 +508,18 @@ C
       real FUNCTION SIGION(I,ML,E,E1,E2,T12)
       use cglow,only: THI,AK,AJ,TS,TA,TB,GAMS,GAMB ! /CXPARS/
       implicit none
-C
+
       integer,intent(in) :: i,ml
       real,intent(in) :: E,E1
       real,intent(out) :: T12
       real,intent(inout) :: E2
-C
+
       DOUBLE PRECISION ABB, ABC, ABD
-      real :: QQ
-      DATA QQ/1.E-16/
-      real :: AK1,AJ1,TS1,TA1,TB1,GAMS1,GAMB1,S,A,TZ,GG,TTL,AL2,AL1,
-     |  TTL1
-C
-C
+      real,parameter :: QQ=1.E-16
+      real :: AK1,AJ1,TS1,TA1,TB1,GAMS1,GAMB1,S,A,TZ,GG,TTL,AL2,AL1,TTL1
+
       IF (E .LE. THI(ML,I)) GOTO 30
-C
+
       AK1=AK(ML,I)
       AJ1=AJ(ML,I)
       TS1=TS(ML,I)
@@ -530,7 +527,7 @@ C
       TB1=TB(ML,I)
       GAMS1=GAMS(ML,I)
       GAMB1=GAMB(ML,I)
-      S=QQ*AK1*ALOG(E/AJ1)
+      S=QQ*AK1*LOG(E/AJ1)
       A=S/E
       TZ=TS1-TA1/(E+TB1)
       GG=(GAMS1*E)/(E+GAMB1)
@@ -540,16 +537,15 @@ C
       IF(E2.GE.TTL)E2=TTL
       ABB=(E2-TZ)/GG
       ABC=(E1-TZ)/GG
-      AL2=GG*GG*(ABB*ABB+1.0)
-      AL1=GG*GG*(ABC*ABC+1.0)
-      ABD=DATAN(ABB)-DATAN(ABC)
-      T12=TZ+0.5*GG*(ALOG(AL2)-ALOG(AL1))/ABD
-      SIGION=A*GG*ABD
+      AL2=real(GG*GG*ABB*ABB+1.0)
+      AL1=real(GG*GG*ABC*ABC+1.0)
+      ABD=ATAN(ABB)-ATAN(ABC)
+      T12=real(TZ+0.5*GG*(LOG(AL2)-LOG(AL1))/ABD)
+      SIGION=real(A*GG*ABD)
       RETURN
 C
    30 SIGION=0.0
-      RETURN
-C
+
       END FUNCTION SIGION
 C
 !-----------------------------------------------------------------------

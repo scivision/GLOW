@@ -67,7 +67,7 @@
     implicit none
 
     integer,save :: ifirst=1
-    integer :: ii,ib,ibb,i,n,jj,j,k,jjj4,iv,ll,kk,im,iq
+    integer :: ii,ibb,i,n,jj,j,k,jjj4,iv,ll,kk,im,iq
     real :: prod(jmax), eprod(jmax), t1(jmax), t2(jmax), tsa(nmaj), &
             produp(jmax,nbins), prodwn(jmax,nbins), &
             phiup(jmax), phidwn(jmax), tsigne(jmax), taue(jmax), &
