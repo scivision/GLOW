@@ -308,8 +308,8 @@ subroutine boxnum (e1, e2, m1, m2, r1, r2, nbins, del, ener)
   implicit none
 
   real,intent(in) :: e1,e2
-  real,intent(in) :: del(nbins), ener(nbins)
   integer,intent(in) :: nbins
+  real,intent(in) :: del(nbins), ener(nbins)
   real,intent(out) :: r1,r2
   integer,intent(out) :: m1,m2
   integer :: i,j

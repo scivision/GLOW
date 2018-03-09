@@ -191,8 +191,8 @@
 
 
   SUBROUTINE GCHEM
-!
-    use cglow,only: jmax, nmaj, nex, nw, nc, kchem, sza, &
+
+    use cglow,only: jmax,  nex, nw,  kchem, sza, &
                     zz, zo, zn2, zo2, zno, zns, znd, ze, ztn, zti, zte, &
                     photoi, photod, phono, pia, sion, aglw, &
                     tei, tpi, tir, e=>ecalc, den=>zxden, zeta, zceta, vcb

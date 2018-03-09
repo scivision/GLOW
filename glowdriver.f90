@@ -36,7 +36,7 @@ program glowdriver
 
   use mpi
 
-   use cglow,only: jmax,nbins,lmax,nmaj,nei,nex,nw,nc,nst, idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec, &
+   use cglow,only: jmax,nbins,nex,nw,nc, idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec, &
     iscale,jlocal,kchem,xuvfac,  zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte, &
     ener,del,phitop,ecalc,zxden,zeta, cglow_init, data_dir,&
     dip, efrac, ierr,sza,zlbh,zceta

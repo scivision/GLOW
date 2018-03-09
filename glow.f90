@@ -118,7 +118,7 @@
 
 subroutine glow
 
-  use cglow,only: jmax,lmax,nw,nst,nmaj,nbins,iscale,nei,ierr, &
+  use cglow,only: jmax,nst,nmaj,iscale,ierr, &
                   glat,glong,idate,ut,f107,f107a, &
                   ener,del,dip,sza,xuvfac, &
                   wave1,wave2,sflux,zmaj,zo,zo2,zn2,zz,ztn,zcol, &
