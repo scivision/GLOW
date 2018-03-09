@@ -74,7 +74,7 @@ Compare your results vs. Stan's results with ``meld``::
 
     ./basic < in.basic.aur > aur.basic.out
 
-    meld out.basic.aur aur.basic.out
+    meld reference/aur981.basic.out aur.basic.out
 
 Aurora Example (night)
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -83,7 +83,7 @@ Aurora Example (night)
 
     ./basic < in.basic.day > day.basic.out
 
-    meld out.basic.day day.basic.out
+    meld reference/out.basic.day day.basic.out
 
 MPI Prereq
 ~~~~~~~~~~
