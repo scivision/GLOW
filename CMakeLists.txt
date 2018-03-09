@@ -9,7 +9,7 @@ add_compile_options(-O3 -g)
 if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Intel")
     add_compile_options(-debug full -traceback -fpe-all=0 -check all)
 else()
-    add_compile_options(-mtune=native -Wall -Warray-bounds -fexceptions -fbacktrace -Werror)
+    add_compile_options(-mtune=native -Wall -Warray-bounds -fexceptions -fbacktrace)
 endif()
 
 # --- legacy libraries
