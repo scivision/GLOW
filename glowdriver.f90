@@ -227,7 +227,7 @@ program glowdriver
 !
 ! Set electron energy grid:
 !
-  call egrid (ener, del, nbins)
+  call egrid(ener, del)
 !
 ! Time loop:
 !

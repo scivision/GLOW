@@ -7,6 +7,8 @@ python:
 os:
   - linux
 
+group: travis_latest
+
 git:
   depth: 3
 
@@ -15,18 +17,13 @@ addons:
     packages:
       - gfortran
 
-install:
-  - pip -q install -e .
+before_install:
+  # temporary for pip < 9.1
+  - pip -q install numpy
 
-script: 
-    # test fortran-only "basic" program
-    - cd build
-    - cmake ..
-    - make
-    - cd ..
-    
-    # separately (previous 4 lines not needed) test python access to Glow
-    - pytest -v
+install: pip -q install -e .[tests]
+
+script: pytest -v
 
 after_success:
   - coverage run tests/test_all.py

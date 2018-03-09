@@ -116,109 +116,107 @@
 ! NC      number of component production terms for each emission
 
 
-    subroutine glow
+subroutine glow
 
-      use cglow,only: jmax,lmax,nw,nst,nmaj,nbins,iscale,nei,ierr, &
-                      glat,glong,idate,ut,f107,f107a, &
-                      ener,del,dip,sza,xuvfac, &
-                      wave1,wave2,sflux,zmaj,zo,zo2,zn2,zz,ztn,zcol, &
-                      photoi,photod, phono,pespec,pia,sespec,phitop, &
-                      uflx,dflx,sion,aglw,eheat,tez, efrac,zno
+  use cglow,only: jmax,lmax,nw,nst,nmaj,nbins,iscale,nei,ierr, &
+                  glat,glong,idate,ut,f107,f107a, &
+                  ener,del,dip,sza,xuvfac, &
+                  wave1,wave2,sflux,zmaj,zo,zo2,zn2,zz,ztn,zcol, &
+                  photoi,photod, phono,pespec,pia,sespec,phitop, &
+                  uflx,dflx,sion,aglw,eheat,tez, efrac,zno
 
-      implicit none
+  implicit none
 
-      real :: zvcd(nmaj,jmax),xf,yf,zf,ff,dec,sdip,teflux
+  real :: zvcd(nmaj,jmax),xf,yf,zf,ff,dec,sdip,teflux
 
-      real,parameter :: pi=4.*atan(1.)
-      integer,save :: ifirst=1
-      integer :: j,i,ist,n,iei
+  real,parameter :: pi=4.*atan(1.)
+  integer,save :: ifirst=1
+  integer :: n
 
 ! First call only: set up energy grid:
 
-      if (ifirst == 1) then
-        ifirst = 0
-        call egrid (ener, del, nbins)
-      endif
+  if (ifirst == 1) then
+    ifirst = 0
+    call egrid(ener, del)
+  endif
 
 ! Find magnetic dip angle and solar zenith angle (radians):
 
-      call fieldm (glat, glong, 300., xf, yf, zf, ff, dip, dec, sdip)
-      dip = abs(dip) * pi/180.
-      if (dip < 0.01) dip=0.01
+  call fieldm (glat, glong, 300., xf, yf, zf, ff, dip, dec, sdip)
+  dip = abs(dip) * pi/180.
+  if (dip < 0.01) dip=0.01
 
-      call solzen (idate, ut, glat, glong, sza)
-      sza = sza * pi/180.
+  call solzen (idate, ut, glat, glong, sza)
+  sza = sza * pi/180.
 
 ! Scale solar flux:
 
-      call ssflux (iscale, f107, f107a, xuvfac, wave1, wave2, sflux)
+  call ssflux (iscale, f107, f107a, xuvfac, wave1, wave2, sflux)
 
 ! Pack major species density array:
 
-      do j=1,jmax
-        zmaj(1,j) = zo(j)
-        zmaj(2,j) = zo2(j)
-        zmaj(3,j) = zn2(j)
-      enddo
-
+  zmaj(1,:) = zo
+  zmaj(2,:) = zo2
+  zmaj(3,:) = zn2
+  
 ! Calculate slant path column densities of major species in the
 ! direction of the sun:
 
-      call rcolum (sza, zz, zmaj, ztn, zcol, zvcd, jmax, nmaj)
+  call rcolum(sza, zz, zmaj, ztn, zcol, zvcd, jmax, nmaj)
 
 ! Call subroutine EPHOTO to calculate the photoelectron production
 ! spectrum and photoionization rates as a function of altitude,
 ! unless all altitudes are dark, in which case zero arrays:
 
-      if (sza < 1.85) then
-        call ephoto
-      else
-        photoi(:,:,:) = 0.0
-        photod(:,:,:) = 0.0
-        phono(:,:) = 0.0
-        pespec(:,:) = 0.0
-      endif
+  if (sza < 1.85) then
+    call ephoto
+  else
+    photoi(:,:,:) = 0.0
+    photod(:,:,:) = 0.0
+    phono(:,:) = 0.0
+    pespec(:,:) = 0.0
+  endif
 
 ! Zero proton aurora ionization rates and secondary electron production (not currently in use):
 
-      pia(:,:) = 0.0
-      sespec(:,:) = 0.0
+  pia(:,:) = 0.0
+  sespec(:,:) = 0.0
 
 ! Add background ionization to photoionization:
 
-      call qback (zmaj, zno, zvcd, photoi, phono, f107, jmax, nmaj, nst)
+  call qback (zmaj, zno, zvcd, photoi, phono, f107, jmax, nmaj, nst)
 
 ! Call subroutine ETRANS to calculate photoelectron and auroral
 ! electron transport and electron impact excitation rates, unless
 ! there are no energetic electrons, in which case zero arrays:
 
-      teflux = 0.
-      do n=1,nbins
-        teflux = teflux + phitop(n)
-      enddo
+  teflux = 0.
+  do n=1,size(phitop)
+    teflux = teflux + phitop(n)
+  enddo
 
-      if (teflux > 0.001 .or. sza < 1.85) then
-        call etrans
-      else
-        uflx(:,:) = 0.0
-        dflx(:,:) = 0.0
-        sion(:,:) = 0.0
-        aglw(:,:,:) = 0.0
-        eheat(:) = 0.0
-        tez(:) = 0.0
-        efrac = 0.0
-        ierr = 0
-      endif
+  if (teflux > 0.001 .or. sza < 1.85) then
+    call etrans
+  else
+    uflx(:,:) = 0.0
+    dflx(:,:) = 0.0
+    sion(:,:) = 0.0
+    aglw(:,:,:) = 0.0
+    eheat(:) = 0.0
+    tez(:) = 0.0
+    efrac = 0.0
+    ierr = 0
+  endif
 
 ! Call subroutine GCHEM to calculate the densities of excited and
 ! ionized consituents, airglow emission rates, and vertical column
 ! brightnesses:
 
-      call gchem
+  call gchem
 
 ! Call subroutine BANDS to calculate band-specific airglow emission
 ! rates (currently only LBH upper state distribution):
 
-      call bands
+  call bands
 
-    end subroutine glow
+end subroutine glow

@@ -24,20 +24,16 @@
 
 subroutine bands
 
-  use cglow, only: jmax, nc, aglw, zeta, zlbh
+use cglow, only: aglw,zlbh
 
-  implicit none
+implicit none
 
-  integer :: k,m
-  real :: fcfac(nc)
-  data fcfac /0.043,0.114,0.168,0.183,0.160,0.122,0.084,0.0,0.0,0.0/
+integer :: m
+real, parameter :: fcfac(*) = [0.043,0.114,0.168,0.183,0.160,0.122,0.084,0.0,0.0,0.0]
 
-  do k=1,jmax
-    do m=1,nc
-      zlbh(m,k)=aglw(4,3,k)*fcfac(m)
-    end do
-  end do
+do m=1,size(fcfac)
+  zlbh(m,:)=aglw(4,3,:)*fcfac(m)
+end do
 
-  return
 
 end subroutine bands

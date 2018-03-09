@@ -10,10 +10,11 @@ from itertools import chain
 from numpy import array,zeros,float32,log,isclose,nan
 from numpy.testing import assert_allclose,run_module_suite
 #
-#from glowiono import makeeigen
 from sciencedates import datetime2yd,datetime2gtd
 #
 import glow
+import glowiono
+#
 msise00=None
 #%% test inputs
 z = list(range(30,110+1,1))
@@ -28,7 +29,7 @@ z += (
          )
 z = array(z)
 
-nbins = 190; jmax=170 #glow.h
+jmax=170 #glow.h
 
 eflux = 1.
 e0 = 1e3
@@ -41,7 +42,7 @@ dtime = datetime(1999,12,21)
 yd,utsec = datetime2yd(dtime)[:2]
 
 def test_egrid_maxt():
-    ener,dE = glow.egrid(199)
+    ener,dE = glow.egrid()
     assert_allclose(ener[[maxind,maxind+10,-1]],[1017.7124,1677.9241,75005.171875],rtol=1e-5)
 #%% test of maxt
     phi = glow.maxt(eflux,e0,ener, dE, itail=0, fmono=nan, emono=nan)

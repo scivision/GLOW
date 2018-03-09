@@ -7,18 +7,17 @@
 ! Stan Solomon, 1/1992
 ! Refactored to f90, SCS, 6/2016
 
-! Inputs:
 !   nbins   number of bins in the electron energy grid
 ! Outputs:
 !   ener    energy at center of each bin, eV
 !   del     width of each bin, eV
 
  
-subroutine egrid (ener, del, nbins)
+subroutine egrid (ener, del)
+  use cglow,only: nbins
 
   implicit none
 
-  integer,intent(in) :: nbins
   real,intent(out) :: ener(nbins), del(nbins)
 
   integer :: n
@@ -32,15 +31,8 @@ subroutine egrid (ener, del, nbins)
   enddo
 
   del(1) = 0.5
+  del(2:) = ener(2:)-ener(:nbins-1)
 
-  do n=2,nbins
-    del(n) = ener(n)-ener(n-1)
-  enddo
-
-  do n=1,nbins
-    ener(n) = ener(n) - del(n)/2.0
-  enddo
-
-  return
+  ener = ener - del / 2.0
 
 end subroutine egrid

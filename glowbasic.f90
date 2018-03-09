@@ -31,34 +31,32 @@ program glowbasic
 ! nw      number of airglow emission wavelengths
 ! nc      number of component production terms for each emission
 
-  use cglow,only: jmax,nbins,lmax,nmaj,nei,nex,nw,nc,nst
-  use cglow,only: idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec
-  use cglow,only: iscale,jlocal,kchem,xuvfac
-  use cglow,only: sza,dip,efrac,ierr
-  use cglow,only: zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte
-  use cglow,only: ener,del,phitop,wave1,wave2,sflux,pespec,sespec,uflx,dflx,sion
-  use cglow,only: photoi,photod,phono,aglw,tei,tpi,tir,ecalc,zxden,zeta,zceta,zlbh
-  use cglow,only: cglow_init
-  use cglow,only: data_dir
+  use, intrinsic:: iso_fortran_env, only: error_unit
+
+  use cglow,only: jmax,nbins,lmax,nmaj,nei,nex,nw,nc,nst, idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec, &
+    iscale,jlocal,kchem,xuvfac, sza,dip,efrac,ierr, zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte, &
+    ener,del,phitop,wave1,wave2,sflux,pespec,sespec,uflx,dflx,sion, photoi,photod,phono,aglw,tei,tpi,tir,&
+    ecalc,zxden,zeta,zceta,zlbh, cglow_init, data_dir
 
   implicit none
 
-  character(len=1024) :: iri90_dir
+  character(*), parameter :: iri90_dir = 'data/iri90/'
 
   real,allocatable :: z(:)                    ! glow height coordinate in km (jmax)
   real,allocatable :: zun(:), zvn(:)          ! neutral wind components (not in use)
   real,allocatable :: pedcond(:), hallcond(:) ! Pederson and Hall conductivities in S/m (mho)
   real,allocatable :: outf(:,:)               ! iri output (11,jmax)
   real :: rz12,stl,fmono,emono
-  real :: d(8), t(2), sw(25), oarr(30)
+  real :: d(8), t(2), oarr(30)
   integer :: l,j,jj,ijf,jmag,iday,mmdd,i,ii,n,k,ix,itail
   integer :: instance,iostatus
   logical :: jf(12)
-  data sw/25*1./
+  
+  data_dir    = 'data/'
 
-!
+
 ! Initialize standard switches:
-!
+
   iscale=1
   xuvfac=3.
   kchem=4
@@ -66,25 +64,18 @@ program glowbasic
   itail=0
   fmono=0.
   emono=0.
-!
-! Set data directories:
-!
-  data_dir    = 'data/'
-  iri90_dir   = 'data/iri90/'
-!
+
 ! Set number of altitude levels:
-!
   jmax = 102
-!
+
 ! Allocate local arrays:
-!
   allocate(z(jmax))
   allocate(zun(jmax))
   allocate(zvn(jmax))
   allocate(pedcond(jmax))
   allocate(hallcond(jmax))
   allocate(outf(11,jmax))
-!
+
 ! Call CGLOW_INIT (module CGLOW) to set array dimensions and allocate use-associated variables:
 ! (This was formerly done using common blocks, including common block /cglow/.)
 !
@@ -92,7 +83,7 @@ program glowbasic
 !
 ! Call EGRID to set up electron energy grid:
 !
-  call egrid (ener, del, nbins)
+  call egrid (ener, del)
 !
 ! Loop to call GLOW for designated inputs until end-of-file or any character on standard input:
 !
@@ -100,7 +91,7 @@ program glowbasic
 !
 ! Get input values:
 !
-    write(6,"('Enter date, UT, lat, lon, F107a, F107, F107p, Ap, Ef, Ec')")
+    write(error_unit,"('Enter date, UT, lat, lon, F107a, F107, F107p, Ap, Ef, Ec')")
     read(5,*,iostat=iostatus) idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec
     if (iostatus /= 0) stop
 !
@@ -139,17 +130,15 @@ program glowbasic
 !
 ! Output section:
 !
-    write(6,"(1x,i7,9f8.1)") idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec
-    write(6,"('   Z     Tn       O        N2        NO      Ne(in)      &
-             Ne(out)  Ionrate      O+       O2+      NO+       N(2D)    Pederson   Hall')")
-    write(6,"(1x,0p,f5.1,f6.0,1p,12e10.2)") (z(j),ztn(j),zo(j),zn2(j),zno(j),ze(j), &
+    write(error_unit,"(1x,i7,9f8.1)") idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec
+    write(error_unit,"('   Z     Tn       O        N2        NO      Ne(in)      "//&
+             "Ne(out)  Ionrate      O+       O2+      NO+       N(2D)    Pederson   Hall')")
+    write(error_unit,"(1x,0p,f5.1,f6.0,1p,12e10.2)") (z(j),ztn(j),zo(j),zn2(j),zno(j),ze(j), &
       ecalc(j),tir(j),zxden(3,j),zxden(6,j),zxden(7,j),zxden(10,j),pedcond(j),hallcond(j),j=1,jmax)
-    write(6,"('   Z      3371    4278    5200    5577    6300    7320   &
+    write(error_unit,"('   Z      3371    4278    5200    5577    6300    7320   &
              10400    3644    7774    8446    3726    LBH     1356    1493    1304')")
-    write(6,"(1x,f5.1,15f8.2)")(z(j),(zeta(ii,j),ii=1,15),j=1,jmax)
+    write(error_unit,"(1x,f5.1,15f8.2)")(z(j),(zeta(ii,j),ii=1,15),j=1,jmax)
 
   enddo
-
-stop
 
 end program glowbasic
