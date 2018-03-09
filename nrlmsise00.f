@@ -1578,7 +1578,7 @@ C        Y: OUTPUT VALUE
         KHI=KHI+1
         GOTO 1
       ENDIF
-      RETURN
+
       END
 C-----------------------------------------------------------------------
       FUNCTION DNET(DD,DM,ZHM,XMM,XM)
@@ -1591,10 +1591,13 @@ C          ZHM - transition scale length
 C          XMM - full mixed molecular weight
 C          XM  - species molecular weight
 C          DNET - combined density
+      use, intrinsic:: iso_fortran_env, only: error_unit
+      real, intent(in) :: DM, ZHM, XMM, XM
       SAVE
       A=ZHM/(XMM-XM)
-      IF(DM.GT.0.AND.DD.GT.0) GOTO 5
-        WRITE(6,*) 'DNET LOG ERROR',DM,DD,XM
+      IF(DM > 0.AND.DD > 0) GOTO 5
+        WRITE(error_unit,*) 'DNET LOG ERROR',DM,DD,XM
+        !error stop
         IF(DD.EQ.0.AND.DM.EQ.0) DD=1.
         IF(DM.EQ.0) GOTO 10
         IF(DD.EQ.0) GOTO 20
@@ -1611,7 +1614,7 @@ C          DNET - combined density
         DNET=DM
         GO TO 50
    50 CONTINUE
-      RETURN
+
       END
 C-----------------------------------------------------------------------
       FUNCTION  CCOR(ALT, R,H1,ZH)

@@ -30,13 +30,17 @@ add_executable(basic glowbasic.f90)
 target_link_libraries(basic glow)
 #include_directories(../build) # for .mod
 
+#------ Python test compile ----
+add_executable(testdrv basic.f90 basic_drv.f90)
+target_link_libraries(testdrv glow)
+
 #---------- NetCDF (optional) ------------
 find_package(netCDF)
 if(netCDF_DIR)
     include_directories(${netCDF_INCLUDE_DIR})
 
     add_library(ionetcdf readtgcm.f90 output.f90 )
-    target_link_libraries(ionetcdf netcdff glow) # yes double "ff"
+    target_link_libraries(ionetcdf PRIVATE netcdff glow) # yes double "ff"
     
     message(STATUS "NetCDF Found:" ${netCDF_INCLUDE_DIR})
 endif()
@@ -51,6 +55,6 @@ if(MPI_Fortran_COMPILER)
     add_compile_options(-pthread)
 
     add_executable(driver glowdriver.f90 tzgrid.f90)
-    target_link_libraries(driver glow ionetcdf ${MPI_Fortran_LIBRARIES})
+    target_link_libraries(driver PRIVATE glow ionetcdf ${MPI_Fortran_LIBRARIES})
 endif()
 

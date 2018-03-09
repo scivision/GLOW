@@ -117,11 +117,11 @@
       real,intent(in) :: f107, f107a, xuvfac
       real,intent(out) :: wave1(lmax), wave2(lmax), sflux(lmax)
 
-      integer :: l, islast
+      integer :: l, islast,u
       real :: wavel(lmax), waves(lmax), rflux(lmax), uflux(lmax)
       real :: scale1(lmax), scale2(lmax), a(lmax), b1(3), b2(3), epsil
       real :: r1, r2, p107
-      character(len=1024) :: filepath
+      character(1024) :: filepath
       data epsil/1.0E-6/
       data islast/-1/
 
@@ -137,12 +137,12 @@
       if (iscale == 0) then
         if (islast /= iscale) then
           filepath = trim(data_dir)//'ssflux_hint.dat'
-          open(unit=1,file=filepath,status='old',action='read')
-          read(1,*)
+          open(newunit=u,file=filepath,status='old',action='read')
+          read(u,*)
           do l=lmax,1,-1
-            read(1,*) waves(l),wavel(l),rflux(l),scale1(l),scale2(l)
+            read(u,*) waves(l),wavel(l),rflux(l),scale1(l),scale2(l)
           enddo
-          close(unit=1)
+          close(u)
         endif
 !
         r1 =  b1(1) + b1(2)*(f107a-71.5) + b1(3)*(f107-f107a+3.9)
@@ -161,12 +161,12 @@
       if (iscale == 1) then
         if (islast /= iscale) then
           filepath = trim(data_dir)//'ssflux_euvac.dat'
-          open(unit=1,file=filepath,status='old',action='read')
-          read(1,*)
+          open(newunit=u,file=filepath,status='old',action='read')
+          read(u,*)
           do l=lmax,1,-1
-            read(1,*) waves(l),wavel(l),rflux(l),a(l)
+            read(u,*) waves(l),wavel(l),rflux(l),a(l)
           enddo
-          close(unit=1)
+          close(u)
         endif
 
       p107 = (f107+f107a)/2.
@@ -184,12 +184,12 @@
       if (iscale == 2) then
         if (islast /= iscale) then
           filepath = trim(data_dir)//'ssflux_user.dat'
-          open(unit=1,file=filepath,status='old',action='read')
-          read(1,*)
+          open(newunit=u,file=filepath,status='old',action='read')
+          read(u,*)
           do l=lmax,1,-1
-            read(1,*) waves(l),wavel(l),uflux(l)
+            read(u,*) waves(l),wavel(l),uflux(l)
           enddo
-          close(unit=1)
+          close(u)
         endif
         do l=1,lmax
           sflux(l)=uflux(l)

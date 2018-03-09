@@ -1,4 +1,4 @@
-program glowbasic
+subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyef,pyec)
 
 ! This software is part of the GLOW model.  Use is governed by the Open Source
 ! Academic Research License Agreement contained in the file glowlicense.txt.
@@ -6,17 +6,17 @@ program glowbasic
 
 ! Version 0.981, 6/2017
 
-! Adapted from glowdriver by Stan Solomon, 2/2016
-
-! Basic single-processor driver for the GLOW model.
-! Uses MSIS/IRI for input.
+! Adapted from glowdriver by Stan Solomon, 2/2
 ! Runs GLOW for designated inputs once, or multiple times.
 ! MPI and netCDF libraries not required.
 
 ! For definitions of use-associated variables, see subroutine GLOW and module CGLOW.
 
 ! Other definitions:
-! f107p   Solar 10.7 cm flux for previous day
+! f107p   Solar 10.7 cm flux for previous day016
+
+! Basic single-processor driver for the GLOW model.
+! Uses MSIS/IRI for input.
 ! ap      Ap index of geomagnetic activity
 ! z       altitude array, km
 
@@ -31,7 +31,7 @@ program glowbasic
 ! nw      number of airglow emission wavelengths
 ! nc      number of component production terms for each emission
 
-  use, intrinsic:: iso_fortran_env, only: input_unit, output_unit
+  use, intrinsic:: iso_fortran_env, only: output_unit
 
   use cglow,only: jmax,nbins,nex, idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec, &
     iscale,jlocal,kchem,xuvfac,  zz,zo,zn2,zo2,zns,znd,zno,ztn,ze,zti,zte, &
@@ -39,6 +39,9 @@ program glowbasic
     ecalc,zxden,zeta, cglow_init, data_dir
 
   implicit none
+  
+  
+  integer, intent(in) :: pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyef,pyec
 
   character(*), parameter :: iri90_dir = 'data/iri90/'
 
@@ -48,9 +51,12 @@ program glowbasic
   real,allocatable :: outf(:,:)               ! iri output (11,jmax)
   real :: stl,fmono,emono
   integer :: j,ii,itail
-  integer :: instance,iostatus
+  integer :: instance
   
   data_dir    = 'data/'
+  
+  idate=pyidate; ut=pyut; glat=pyglat; glong=pyglong;
+  f107a=pyf107a; f107=pyf107; f107p=pyf107p; ap=pyap; ef=pyef; ec=pyec
 
 
 ! Initialize standard switches:
@@ -86,14 +92,7 @@ program glowbasic
 ! Loop to call GLOW for designated inputs until end-of-file or any character on standard input:
 !
   do instance=1,10000
-!
-! Get input values:
-!
-    write(output_unit,"('Enter date, UT, lat, lon, F107a, F107, F107p, Ap, Ef, Ec')")
-    read(input_unit,*,iostat=iostatus) idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec
-    if (iostatus > 0) error stop 'error in user input'
-    if (iostatus < 0) stop 'End of user input, goodbye.'
-!
+
 ! Calculate local solar time:
 !
     stl = ut/3600. + glong/15.
@@ -101,7 +100,7 @@ program glowbasic
     if (stl >= 24.) stl = stl - 24.
 !
 ! Call MZGRID to use MSIS/NOEM/IRI inputs on default altitude grid:
-!
+
     call mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_dir, &
                  z,zo,zo2,zn2,zns,znd,zno,ztn,zun,zvn,ze,zti,zte,zxden)
 !
@@ -126,10 +125,9 @@ program glowbasic
                     zxden(3,j), zxden(6,j), zxden(7,j), ztn(j), zti(j), zte(j), &
                     pedcond(j), hallcond(j))
     enddo
-!
+
 ! Output section:
-!
-    write(output_unit,"(1x,i7,9f8.1)") idate,ut,glat,glong,f107a,f107,f107p,ap,ef,ec
+
     write(output_unit,"('   Z     Tn       O        N2        NO      Ne(in)      "//&
              "Ne(out)  Ionrate      O+       O2+      NO+       N(2D)    Pederson   Hall')")
     write(output_unit,"(1x,0p,f5.1,f6.0,1p,12e10.2)") (z(j),ztn(j),zo(j),zn2(j),zno(j),ze(j), &
@@ -140,4 +138,4 @@ program glowbasic
 
   enddo
 
-end program glowbasic
+end subroutine glowbasic

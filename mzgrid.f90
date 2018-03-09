@@ -42,12 +42,14 @@
 
 subroutine mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_dir, &
                    z,zo,zo2,zn2,zns,znd,zno,ztn,zun,zvn,ze,zti,zte,zxden)
+                   
+  use, intrinsic:: iso_fortran_env, only: error_unit
 
   implicit none
 
   integer,intent(in) :: jmax,nex,idate
   real,intent(in) :: ut,glat,glong,stl,f107a,f107,f107p,ap
-  character(len=1024),intent(in) :: iri90_dir
+  character(*),intent(in) :: iri90_dir
   real,intent(out) :: z(jmax),zo(jmax),zo2(jmax),zn2(jmax),zns(jmax),znd(jmax), &
        zno(jmax),ztn(jmax),zti(jmax),zte(jmax),zun(jmax),zvn(jmax),ze(jmax),zxden(nex,jmax)
 
@@ -58,8 +60,8 @@ subroutine mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_di
   data sw/25*1./
 
   if (jmax /= 102) then
-    write(6,"('mzgrid: unknown JMAX = ',i5)") jmax
-    stop 'mzgrid'
+    write(error_unit,"('mzgrid: unknown JMAX = ',i5)") jmax
+    error stop 'mzgrid'
   endif
 
   allocate(outf(11,jmax))
@@ -109,8 +111,10 @@ subroutine mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_di
         iday = idate - idate/1000*1000
         mmdd = -iday
         outf = 0.
+        
+        !print *,jf,jmag,glat,glong,rz12,mmdd,stl,jmax,trim(iri90_dir); stop
 
-        call iri90(jf,jmag,glat,glong,rz12,mmdd,stl,z,jmax,trim(iri90_dir),outf,oarr)
+        call iri90(jf,jmag,glat,glong,rz12,mmdd,stl,z,jmax,trim(iri90_dir), outf,oarr)
 
         do j=1,jmax
           ze(j) = outf(1,j) / 1.E6

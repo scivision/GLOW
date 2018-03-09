@@ -43,7 +43,7 @@ yd,utsec = datetime2yd(dtime)[:2]
 
 def test_egrid_maxt():
     ener,dE = glow.egrid()
-    assert_allclose(ener[[maxind,maxind+10,-1]],[1017.7124,1677.9241,75005.171875],rtol=1e-5)
+    assert_allclose(ener[[maxind,maxind+10,-1]],[1017.7124,1677.9241, 47825.418],rtol=1e-5)
 #%% test of maxt
     phi = glow.maxt(eflux,e0,ener, dE, itail=0, fmono=nan, emono=nan)
     assert phi.argmax() == maxind
