@@ -47,7 +47,7 @@ subroutine mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_di
 
   integer,intent(in) :: jmax,nex,idate
   real,intent(in) :: ut,glat,glong,stl,f107a,f107,f107p,ap
-  character(len=1024),intent(in) :: iri90_dir
+  character(*),intent(in) :: iri90_dir
   real,intent(out) :: z(jmax),zo(jmax),zo2(jmax),zn2(jmax),zns(jmax),znd(jmax), &
        zno(jmax),ztn(jmax),zti(jmax),zte(jmax),zun(jmax),zvn(jmax),ze(jmax),zxden(nex,jmax)
 
