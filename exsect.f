@@ -537,8 +537,8 @@ C
       IF(E2.GE.TTL)E2=TTL
       ABB=(E2-TZ)/GG
       ABC=(E1-TZ)/GG
-      AL2=real(GG*GG*ABB*ABB+1.0)
-      AL1=real(GG*GG*ABC*ABC+1.0)
+      AL2=real(GG*GG*(ABB*ABB+1.0))
+      AL1=real(GG*GG*(ABC*ABC+1.0))
       ABD=ATAN(ABB)-ATAN(ABC)
       T12=real(TZ+0.5*GG*(LOG(AL2)-LOG(AL1))/ABD)
       SIGION=real(A*GG*ABD)
