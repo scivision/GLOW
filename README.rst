@@ -1,23 +1,14 @@
 |Build Status|
 
+====
 GLOW
 ====
 
-The GLobal airglOW Model
+The GLobal airglOW Model -- aurora and dayglow, IR-VIS-UV-EUV
 
-This directory contains:
 
--  Modern Fortran source code files,
--  Makefile
--  CMakeLists.txt
--  Example input and output files
--  Example job script
--  ``data/`` contains input data files,
--  ``data/iri90/`` contains IRI input data files
--  `Release Notes <ReleaseNotes.rst>`__
-
-Python install
---------------
+Install
+=======
 
 This command automatically compiles the Fortran code to access from
 Python on any platform::
@@ -27,6 +18,19 @@ Python on any platform::
 Run self-test with::
 
     pytest -v
+
+
+Usage
+=====
+For now, only VER plots are enabled.
+Much more data is readily available, just let me know.
+
+:: 
+
+
+    python RunGlow.py
+
+
 
 Fortran-only (optional)
 -----------------------
