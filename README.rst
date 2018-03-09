@@ -72,11 +72,11 @@ different results of unpredictable variance.
 Aurora example (night)
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Compare your results vs. Stan's results with ``meld``::
+Compare your results vs. Stan's results:: with ``meld``::
 
     ./basic < in.basic.aur > aur.basic.out
 
-    meld reference/aur981.basic.out aur.basic.out
+    meld reference/aur981.basic.out <(./basic < in.basic.aur)
 
 Aurora Example (night)
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -85,7 +85,10 @@ Aurora Example (night)
 
     ./basic < in.basic.day > day.basic.out
 
-    meld reference/out.basic.day day.basic.out
+
+To compare::
+
+    meld reference/out.basic.day <(./basic < in.basic.day)
 
 MPI Prereq
 ~~~~~~~~~~

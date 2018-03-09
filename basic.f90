@@ -41,7 +41,8 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pye
   implicit none
   
   
-  integer, intent(in) :: pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyef,pyec
+  integer, intent(in) :: pyidate
+  real, intent(in) ::pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pyef,pyec
 
   character(*), parameter :: iri90_dir = 'data/iri90/'
 
