@@ -51,7 +51,6 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pye
   real,allocatable :: outf(:,:)               ! iri output (11,jmax)
   real :: stl,fmono,emono
   integer :: j,ii,itail
-  integer :: instance
   
   data_dir    = 'data/'
   
@@ -88,10 +87,6 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pye
 ! Call EGRID to set up electron energy grid:
 !
   call egrid (ener, del)
-!
-! Loop to call GLOW for designated inputs until end-of-file or any character on standard input:
-!
-  do instance=1,10000
 
 ! Calculate local solar time:
 !
@@ -136,6 +131,5 @@ subroutine glowbasic(pyidate,pyut,pyglat,pyglong,pyf107a,pyf107,pyf107p,pyap,pye
              "10400    3644    7774    8446    3726    LBH     1356    1493    1304')")
     write(output_unit,"(1x,f5.1,15f8.2)")(z(j),(zeta(ii,j),ii=1,15),j=1,jmax)
 
-  enddo
 
 end subroutine glowbasic
