@@ -49,6 +49,8 @@ This creates:
 +--------------+-------------------+
 | driver       | MPI/NetCDF GLOW   |
 +--------------+-------------------+
+| testdrv      | Python intfc test |
++--------------+-------------------+
 
 Fortran examples
 ~~~~~~~~~~~~~~~~
