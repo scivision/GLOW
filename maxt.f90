@@ -34,37 +34,28 @@
     real,intent(out) :: phi(nbins)
 
     integer :: k
-    real :: te, b, phimax, erat
+    real :: te, b, erat
+    real, parameter :: echarge = 1.6022e-12  !1.60217662e-12
+    real, parameter :: phimax = exp(1.)
 
     te = 0.
 
-    if (ezer < 500.) then
-      b = 0.8*ezer
-    else
-      b = 0.1*ezer + 350.
-    endif
-
-    phimax = exp(-1.)
+    b = merge(0.8*ezer, 0.1*ezer + 350., ezer < 500.) 
 
     do k=1,nbins
       erat = ener(k) / ezer
       if (erat > 60.) erat = 60.
       phi(k) = erat * exp(-erat)
       if (itail > 0) phi(k) = phi(k) + 0.4*phimax*(ezer/ener(k))*exp(-ener(k)/b)
-      te = te + phi(k) * del(k) * ener(k) * 1.6022e-12
+      te = te + phi(k) * del(k) * ener(k) * echarge
     enddo
 
-    do k=1,nbins
-      phi(k) = phi(k) * eflux / te
-    enddo
+    phi(:) = phi(:) * eflux / te
 
     if (fmono > 0.) then
-      do k=1,nbins
-        if (emono > ener(k)-del(k)/2. .and. emono < ener(k)+del(k)/2.) &
-          phi(k)=phi(k)+fmono/(1.6022e-12*del(k)*ener(k))
-      enddo
+      where(emono > ener(:)-del(:)/2. .and. emono < ener(:)+del(:)/2.) 
+        phi(:) = phi(:) + fmono / (echarge*del(:)*ener(:))
+      endwhere
     endif
-
-    return
 
   end subroutine maxt
