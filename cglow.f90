@@ -47,11 +47,11 @@ module cglow
 !    >                TS(NEI,NMAJ),   TA(NEI,NMAJ),   TB(NEI,NMAJ),
 !    >                GAMS(NEI,NMAJ), GAMB(NEI,NMAJ)
 
-
+  use, intrinsic:: iso_fortran_env, only: wp=>real32, real64
   implicit none
   save
 
-  real, parameter :: pi = atan(1.)*4.
+  real(wp), parameter :: pi = atan(1.)*4.
 
 ! Array dimensions, configurable:
 
@@ -74,29 +74,29 @@ module cglow
   character(1024) :: data_dir
 
   integer :: idate,iscale,jlocal,kchem,ierr
-  real    :: ut,glat,glong,f107,f107a,f107p,ap
-  real    :: xuvfac, sza, dip, efrac
-  real,dimension(nw) :: vcb
+  real(wp)    :: ut,glat,glong,f107,f107a,f107p,ap
+  real(wp)    :: xuvfac, sza, dip, efrac
+  real(wp),dimension(nw) :: vcb
 
-  real,allocatable,dimension(:) ::             &                   ! (jmax)
+  real(wp),allocatable,dimension(:) ::             &                   ! (jmax)
     zz, zo, zn2, zo2, zno, zns, znd, zrho, ze, &
     ztn, zti, zte, eheat, tez, ecalc, tei, tpi, tir
-  real,allocatable,dimension(:)     :: phitop, ener, del           ! (nbins) 
-  real,allocatable,dimension(:)     :: wave1, wave2, sflux         ! (lmax)
-  real,allocatable,dimension(:,:)   :: pespec, sespec, uflx, dflx  ! (nbins,jmax)
-  real,allocatable,dimension(:,:)   :: zmaj, zcol, pia, sion       ! (nmaj,jmax)
-  real,allocatable,dimension(:,:,:) :: photoi, photod              ! (nst,nmaj,jmax)
-  real,allocatable,dimension(:,:)   :: phono                       ! (nst,jmax)
-  real,allocatable,dimension(:,:,:) :: aglw                        ! (nei,nmaj,jmax)
-  real,allocatable,dimension(:,:)   :: zxden                       ! (nex,jmax)
-  real,allocatable,dimension(:,:)   :: zeta                        ! (nw,jmax)
-  real,allocatable,dimension(:,:,:) :: zceta                       ! (nc,nw,jmax)
-  real,allocatable,dimension(:,:)   :: zlbh                        ! (nc,jmax)
-  real,allocatable,dimension(:,:)   :: sigs,pe,pin                 ! (nmaj,nbins)
-  real,allocatable,dimension(:,:,:) :: sigex,sigix                 ! (nei,nmaj,nbins)
-  real,allocatable,dimension(:,:,:) :: siga,sec                    ! (nei,nbins,nbins)
+  real(wp),allocatable,dimension(:)     :: phitop, ener, del           ! (nbins) 
+  real(wp),allocatable,dimension(:)     :: wave1, wave2, sflux         ! (lmax)
+  real(wp),allocatable,dimension(:,:)   :: pespec, sespec, uflx, dflx  ! (nbins,jmax)
+  real(wp),allocatable,dimension(:,:)   :: zmaj, zcol, pia, sion       ! (nmaj,jmax)
+  real(wp),allocatable,dimension(:,:,:) :: photoi, photod              ! (nst,nmaj,jmax)
+  real(wp),allocatable,dimension(:,:)   :: phono                       ! (nst,jmax)
+  real(wp),allocatable,dimension(:,:,:) :: aglw                        ! (nei,nmaj,jmax)
+  real(wp),allocatable,dimension(:,:)   :: zxden                       ! (nex,jmax)
+  real(wp),allocatable,dimension(:,:)   :: zeta                        ! (nw,jmax)
+  real(wp),allocatable,dimension(:,:,:) :: zceta                       ! (nc,nw,jmax)
+  real(wp),allocatable,dimension(:,:)   :: zlbh                        ! (nc,jmax)
+  real(wp),allocatable,dimension(:,:)   :: sigs,pe,pin                 ! (nmaj,nbins)
+  real(wp),allocatable,dimension(:,:,:) :: sigex,sigix                 ! (nei,nmaj,nbins)
+  real(wp),allocatable,dimension(:,:,:) :: siga,sec                    ! (nei,nbins,nbins)
   integer,allocatable,dimension(:)  :: iimaxx                      ! (nbins)
-  real,allocatable,dimension(:,:) :: &                             ! (nei,nmaj)
+  real(wp),allocatable,dimension(:,:) :: &                             ! (nei,nmaj)
     ww,ao,omeg,anu,bb,auto,thi,ak,aj,ts,ta,tb,gams,gamb
 
   contains

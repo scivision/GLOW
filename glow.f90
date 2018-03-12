@@ -124,6 +124,7 @@ subroutine glow
                   wave1,wave2,sflux,zmaj,zo,zo2,zn2,zz,ztn,zcol, &
                   photoi,photod, phono,pespec,pia,sespec,phitop, &
                   uflx,dflx,sion,aglw,eheat,tez, efrac,zno
+  use sun_angles, only: solzen
 
   implicit none
 
