@@ -139,5 +139,4 @@
 
       if (HallCond < 0.) HallCond=0.
 
-      return
     end subroutine conduct

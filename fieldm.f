@@ -113,5 +113,5 @@ C
       DIP=DIP/UMR
       DEC=DEC/UMR
       SMODIP=SMODIP/UMR
-      RETURN
-      END
+
+      END SUBROUTINE FIELDM

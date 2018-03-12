@@ -83,54 +83,52 @@ subroutine mzgrid (jmax,nex,idate,ut,glat,glong,stl,f107a,f107,f107p,ap,iri90_di
 !
 ! Call MSIS-2K to get neutral densities and temperature:
 !
-        call tselec(sw)
+call tselec(sw)
 
-        do j=1,jmax ! levels
-          call gtd7(idate,ut,z(j),glat,glong,stl,f107a,f107p,ap,48,d,t)
-          zo(j) = d(2)
-          zn2(j) = d(3)
-          zo2(j) = d(4)
-          zns(j) = d(8)
-          ztn(j) = t(2)
-          znd(j)  = 0.
-        enddo
+do j=1,jmax ! levels
+  call gtd7(idate,ut,z(j),glat,glong,stl,f107a,f107p,ap,48,d,t)
+  zo(j) = d(2)
+  zn2(j) = d(3)
+  zo2(j) = d(4)
+  zns(j) = d(8)
+  ztn(j) = t(2)
+  znd(j)  = 0.
+enddo
 !
 ! Call SNOEMINT to obtain NO profile from the Nitric Oxide Empirical Model (NOEM):
 !
-        call snoemint(idate,glat,glong,f107,ap,jmax,z,ztn,zno)
+call snoemint(idate,glat,glong,f107,ap,jmax,z,ztn,zno)
 !
 ! Call International Reference Ionosphere-1990 subroutine to get
 ! electron density, electron temperature, and ion temperature:
 ! The directory iri90_dir is the location of the ccirnn.asc and ursinn.asc files.
 !
-        jf(:) = .true.
+jf(:) = .true.
 !       jf(12) = .false.
-        jf(5) = .false.
-        jmag = 0
-        rz12 = -f107a
-        iday = modulo(idate,1000)
-        mmdd = -iday
-        outf = 0.
-        
-        !print *,jf,jmag,glat,glong,rz12,mmdd,stl,jmax,trim(iri90_dir); stop
+jf(5) = .false.
+jmag = 0
+rz12 = -f107a
+iday = modulo(idate,1000)
+mmdd = -iday
+outf = 0.
 
-        call iri90(jf,jmag,glat,glong,rz12,mmdd,stl,z,jmax,trim(iri90_dir), outf,oarr)
+!print *,jf,jmag,glat,glong,rz12,mmdd,stl,jmax,trim(iri90_dir); stop
 
-        do j=1,jmax
-          ze(j) = outf(1,j) / 1.E6
-          if (ze(j) < 100.) ze(j) = 100.
-          zti(j) = outf(3,j)
-          if (zti(j) < ztn(j)) zti(j) = ztn(j)
-          zte(j) = outf(4,j)
-          if (zte(j) < ztn(j)) zte(j) = ztn(j)
-          zxden(3,j) = ze(j) * outf(5,j)/100.
-          zxden(6,j) = ze(j) * outf(8,j)/100.
-          zxden(7,j) = ze(j) * outf(9,j)/100.
-        enddo
-!
+call iri90(jf,jmag,glat,glong,rz12,mmdd,stl,z,jmax,trim(iri90_dir), outf,oarr)
+
+
+ze(:) = outf(1,:) / 1.E6
+where(ze(:) < 100.)      ze(:) = 100.
+zti(:) = outf(3,:)
+where(zti(:) < ztn(:))   zti(:) = ztn(:)
+zte(:) = outf(4,:)
+where(zte(:) < ztn(:))   zte(:) = ztn(:)
+zxden(3,:) = ze(:) * outf(5,:)/100.
+zxden(6,:) = ze(:) * outf(8,:)/100.
+zxden(7,:) = ze(:) * outf(9,:)/100.
 ! Until implementation of an empirical neutral wind model, winds are set to zero:
 !
-        zun(:) = 0.
-        zvn(:) = 0.
+zun(:) = 0.
+zvn(:) = 0.
 
 end subroutine mzgrid

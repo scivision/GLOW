@@ -68,15 +68,15 @@
 
 subroutine ephoto
 
-  use cglow,only: jmax,nbins,lmax,nmaj,nst
-  use cglow,only: wave1,wave2,phono,photoi,photod,pespec,zcol,sflux
-  use cglow,only: zmaj,del,ener,zno
-  use cglow,only: data_dir
+  use cglow,only: jmax,nbins,lmax,nmaj,nst, &
+                  wave1,wave2,phono,photoi,photod,pespec,zcol,sflux, &
+                  zmaj,del,ener,zno, &
+                  data_dir
 
   implicit none
   save
 
-  integer :: nnn(nmaj)
+  integer :: nnn(nmaj), u
   real ::   dspect(jmax), flux(lmax,jmax), &
             sigion(nmaj,lmax), sigabs(nmaj,lmax), &
             tpot(nst,nmaj), prob(nst,nmaj,lmax), &
@@ -91,7 +91,7 @@ subroutine ephoto
   integer :: ifirst=1
   integer :: l,n,k,i,j,m1,m2
   real :: aa,bb,fac,e1,e2,y,r1,r2
-  character(len=1024) :: filepath
+  character(1024) :: filepath
 
   nnn = [5,4,6]
   tpot(1:nst,1) = [13.61, 16.93, 18.63, 28.50, 40.00,  0.00]
@@ -115,54 +115,50 @@ subroutine ephoto
     ifirst = 0
 
     filepath = trim(data_dir)//'ephoto_xn2.dat'
-    open(unit=1,file=filepath,status='old',action='read')
-    read(1,*)
-    read(1,*)
-    read(1,*)
-    read(1,*)
+    open(newunit=u,file=filepath,status='old',action='read')
+    read(u,*)
+    read(u,*)
+    read(u,*)
+    read(u,*)
     do l=lmax,1,-1
-      read(1,*) aa,bb,(probn2(n,l),n=1,nst),sigin2(l),sigan2(l)
+      read(u,*) aa,bb,(probn2(n,l),n=1,nst),sigin2(l),sigan2(l)
     enddo
-    close(1)
+    close(u)
 
     filepath = trim(data_dir)//'ephoto_xo2.dat'
-    open(unit=1,file=filepath,status='old',action='read')
-    read(1,*)
-    read(1,*)
-    read(1,*)
-    read(1,*)
+    open(newunit=u,file=filepath,status='old',action='read')
+    read(u,*)
+    read(u,*)
+    read(u,*)
+    read(u,*)
     do l=lmax,1,-1
-      read(1,*) aa,bb,(probo2(n,l),n=1,nst),sigio2(l),sigao2(l)
+      read(u,*) aa,bb,(probo2(n,l),n=1,nst),sigio2(l),sigao2(l)
     enddo
-    close(1)
+    close(u)
 
     filepath = trim(data_dir)//'ephoto_xo.dat'
-    open(unit=1,file=filepath,status='old',action='read')
-    read(1,*)
-    read(1,*)
-    read(1,*)
-    read(1,*)
+    open(newunit=u,file=filepath,status='old',action='read')
+    read(u,*)
+    read(u,*)
+    read(u,*)
+    read(u,*)
     do l=lmax,1,-1
-      read(1,*) aa,bb,(probo(n,l),n=1,nst),sigio(l),sigao(l)
+      read(u,*) aa,bb,(probo(n,l),n=1,nst),sigio(l),sigao(l)
     enddo
-    close(1)
+    close(u)
 
-    do l=1,size(sigao)
-      sigabs(1,l) = sigao(l)  * 1.e-18
-      sigabs(2,l) = sigao2(l) * 1.e-18
-      sigabs(3,l) = sigan2(l) * 1.e-18
-      sigion(1,l) = sigio(l)  * 1.e-18
-      sigion(2,l) = sigio2(l) * 1.e-18
-      sigion(3,l) = sigin2(l) * 1.e-18
-    enddo
+    sigabs(1,:) = sigao(:)  * 1.e-18
+    sigabs(2,:) = sigao2(:) * 1.e-18
+    sigabs(3,:) = sigan2(:) * 1.e-18
+    sigion(1,:) = sigio(:)  * 1.e-18
+    sigion(2,:) = sigio2(:) * 1.e-18
+    sigion(3,:) = sigin2(:) * 1.e-18
 
-    do l=1,lmax
-      do k=1,nst
-        prob(k,1,l) = probo(k,l)
-        prob(k,2,l) = probo2(k,l)
-        prob(k,3,l) = probn2(k,l)
-      enddo
-    enddo
+
+
+    prob(:,1,:) = probo(:,:)
+    prob(:,2,:) = probo2(:,:)
+    prob(:,3,:) = probn2(:,:)
 
     do l=1,lmax 
       do i=1,nmaj 
@@ -226,9 +222,7 @@ subroutine ephoto
 
 ! Calculate total ionization rates for all species and altitudes:
 
-      do j=1,jmax
-        rion(l,i,j)=zmaj(i,j)*sigion(i,l)*flux(l,j)
-      enddo
+      rion(l,i,:) = zmaj(i,:)*sigion(i,l)*flux(l,:)
 
 ! Loop over states to calculate state-specific ionization rates at all altitudes:
 
@@ -239,10 +233,9 @@ subroutine ephoto
         if (e2 >= 0.) then
 
           if (e1 < 0.) e1=0. 
-          do j=1,jmax
-            dspect(j) = rion(l,i,j)*prob(k,i,l) 
-            photoi(k,i,j) = photoi(k,i,j) + dspect(j)
-          enddo
+
+          dspect(:) = rion(l,i,:)*prob(k,i,l) 
+          photoi(k,i,:) = photoi(k,i,:) + dspect(:)
 
 ! Find box numbers m1, m2 corresponding to energies e1, e2:
 
@@ -266,9 +259,7 @@ subroutine ephoto
                   endif
                 endif
               endif
-              do j=1,jmax
-                pespec(n,j) = pespec(n,j) + dspect(j) * fac
-              enddo
+              pespec(n,:) = pespec(n,:) + dspect(:) * fac
             enddo
           endif
 
@@ -283,17 +274,13 @@ subroutine ephoto
         e2 = auge(i)
         call boxnum (e1, e2, m1, m2, r1, r2, nbins, del, ener) 
         if (m1 <= nbins .and. m2 <= nbins) then
-          do j=1,jmax
-            pespec(m1,j) = pespec(m1,j) + rion(l,i,j)
-          enddo
+          pespec(m1,:) = pespec(m1,:) + rion(l,i,:)
         endif
       endif
 
     enddo     ! bottom of species loop
 
   enddo     ! bottom of wavelength loop
-
-  return
 
 end subroutine ephoto
 
@@ -331,6 +318,5 @@ subroutine boxnum (e1, e2, m1, m2, r1, r2, nbins, del, ener)
     endif
   enddo
   m1 = nbins+1
-  return
 
 end subroutine boxnum
