@@ -12,7 +12,7 @@
 
     subroutine snoem(doy, kp, f107, z, mlat, nozm)
 
-      use cglow,only: data_dir
+      use cglow,only: data_dir,pi
 
       implicit none
 
@@ -27,22 +27,22 @@
       real :: theta0           ! day number in degrees
       real :: dec              ! solar declination angle
       real :: m1, m2, m3       ! coefficients for first 3 eofs
-      real, parameter :: pi=4.*atan(1.)
+
       integer, save :: ifirst=1
-      integer :: j, k, n
-      character(len=1024) :: filepath 
+      integer :: j, k, n,u
+      character(1024) :: filepath 
 
 !... read eof file on first call
 
       if (ifirst == 1) then
         ifirst = 0
         filepath = trim(data_dir)//'snoem_eof.dat'
-        open(unit=1,file=filepath,status='old',action='read')
-        read(1,*) (zin(k),k=1,16)
-        read(1,*) (mlatin(j),j=1,33)
-        read(1,*) ((no_mean(j,k),j=1,33),k=1,16)
-        read(1,*) (((eofs(j,k,n),j=1,33),k=1,16),n=1,3)
-        close(unit=1)
+        open(newunit=u,file=filepath,status='old',action='read')
+        read(u,*) (zin(k),k=1,16)
+        read(u,*) (mlatin(j),j=1,33)
+        read(u,*) ((no_mean(j,k),j=1,33),k=1,16)
+        read(u,*) (((eofs(j,k,n),j=1,33),k=1,16),n=1,3)
+        close(u)
       endif
 
 !... calculate coefficients (m1 to m3) for eofs based on geophysical parameters
@@ -66,18 +66,13 @@
       
 !... eof3 - f107 
 
-      m3 =  alog10(f107) * 6.35777 - 13.8163 
+      m3 = log10(f107) * 6.35777 - 13.8163 
 
 !... zonal mean distrib. is sum of mean and eofs
 
-      do k=1,16
-        do j=1,33
-          nozm(j,k) = no_mean(j,k)-m1*eofs(j,k,1)+m2*eofs(j,k,2)-m3*eofs(j,k,3) 
-        end do
-      end do
+      nozm(:,:) = no_mean(:,:) - m1*eofs(:,:,1) + m2*eofs(:,:,2) - m3*eofs(:,:,3) 
+      
       z(:) = zin(:)
       mlat(:) = mlatin(:)
-
-      return
 
     end subroutine snoem
