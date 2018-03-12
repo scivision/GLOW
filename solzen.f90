@@ -12,6 +12,7 @@
 ! universal time in seconds, geographic latitude and longitude in degrees.
 
 subroutine solzen (idate, ut, glat, glong, sza)
+  use cglow, only: pi
 
   implicit none
 
@@ -19,7 +20,6 @@ subroutine solzen (idate, ut, glat, glong, sza)
   real,intent(in) :: ut, glat, glong
   real,intent(out) :: sza
 
-  real,parameter :: pi=4.*atan(1.)
   real :: rlat, rlong, sdec, srasn, gst, rh, cossza
 
   rlat = glat * pi/180.
@@ -28,7 +28,6 @@ subroutine solzen (idate, ut, glat, glong, sza)
   rh = srasn - (gst+rlong)
   cossza = sin(sdec)*sin(rlat) + cos(sdec)*cos(rlat)*cos(rh)
   sza = acos(cossza) * 180./pi
-  return
 
 end subroutine solzen
 
@@ -39,16 +38,17 @@ end subroutine solzen
 ! time GST in radians.  Reference:  C.T. Russell, Geophysical Coordinate Transforms.
 
 subroutine suncor (idate, ut, sdec, srasn, gst)
-
+  use cglow, only: pi
+  
   implicit none
 
   integer,intent(in) :: idate
   real,intent(in) :: ut
   real,intent(out) :: sdec, srasn, gst
 
-  real,parameter :: pi=4.*atan(1.)
   real :: fday, dj, t, vl, g, slong, obliq, slp, sind, cosd
   integer :: iyr, iday
+
 
   fday=ut/86400.
   iyr=idate/1000
@@ -64,9 +64,9 @@ subroutine suncor (idate, ut, sdec, srasn, gst)
 
   dj=365*iyr+(iyr-1)/4+iday+fday-0.5
   t=dj/36525.
-  vl=amod(279.696678+.9856473354*dj,360.)
-  gst=amod(279.696678+.9856473354*dj+360.*fday+180.,360.) * pi/180.
-  g=amod(358.475845+.985600267*dj,360.) * pi/180.
+  vl = mod(279.696678+.9856473354*dj,360.)
+  gst = mod(279.696678+.9856473354*dj+360.*fday+180.,360.) * pi/180.
+  g = mod(358.475845+.985600267*dj,360.) * pi/180.
   slong=vl+(1.91946-.004789*t)*sin(g)+.020094*sin(2.*g)
   obliq=(23.45229-0.0130125*t) *pi/180.
   slp=(slong-.005686) * pi/180.
@@ -74,7 +74,5 @@ subroutine suncor (idate, ut, sdec, srasn, gst)
   cosd=sqrt(1.-sind**2)
   sdec=atan(sind/cosd)
   srasn=pi-atan2(1./tan(obliq)*sind/cosd,-cos(slp)/cosd)
-
-  return
 
 end subroutine suncor
