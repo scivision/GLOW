@@ -119,21 +119,25 @@
 
       integer :: l, islast,u
       real :: wavel(lmax), waves(lmax), rflux(lmax), uflux(lmax)
-      real :: scale1(lmax), scale2(lmax), a(lmax), b1(3), b2(3), epsil
+      real :: scale1(lmax), scale2(lmax), a(lmax)
       real :: r1, r2, p107
       character(1024) :: filepath
-      data epsil/1.0E-6/
+      
+      ! regression coefficients which reduce to solar min. spectrum:
+      real, parameter :: b1(*) = [1.0, 0.0138, 0.005], b2(*) = [1.0, 0.59425, 0.3811]
+      
+      real, parameter :: epsil = 1.0E-6
+      
       data islast/-1/
 
-! regression coefficients which reduce to solar min. spectrum:
-      data b1/1.0, 0.0138, 0.005/, b2/1.0, 0.59425, 0.3811/
+
 
 ! 'best fit' regression coefficients, commented out, for reference:
 !     DATA B1/1.31, 0.01106, 0.00492/, B2/-6.618, 0.66159, 0.38319/
 
 
 ! Hinteregger contrast ratio method:
-
+ 
       if (iscale == 0) then
         if (islast /= iscale) then
           filepath = trim(data_dir)//'ssflux_hint.dat'
@@ -147,13 +151,14 @@
 !
         r1 =  b1(1) + b1(2)*(f107a-71.5) + b1(3)*(f107-f107a+3.9)
         r2 =  b2(1) + b2(2)*(f107a-71.5) + b2(3)*(f107-f107a+3.9)
-!
-        do l=1,lmax
-          sflux(l) = rflux(l) + (r1-1.)*scale1(l) + (r2-1.)*scale2(l)
-          if (sflux(l) < 0.0) sflux(l) = 0.0
-          if (xuvfac > epsil .and. wavel(l) < 251.0 .and. waves(l) > 17.0) &
-            sflux(l)=sflux(l)*xuvfac
-        enddo
+
+        sflux(:) = rflux(:) + (r1-1.)*scale1(:) + (r2-1.)*scale2(:)
+       
+        where(sflux(:) < 0.0)   sflux(:) = 0.0
+        
+        where(xuvfac > epsil .and. wavel(:) < 251.0 .and. waves(:) > 17.0) 
+            sflux(:)=sflux(:)*xuvfac
+        endwhere
       endif
 
 ! EUVAC Method:
@@ -169,14 +174,15 @@
           close(u)
         endif
 
-      p107 = (f107+f107a)/2.
+        p107 = (f107+f107a)/2.
 
-        do l=1,lmax
-          sflux(l) = rflux(l) * (1. + a(l)*(p107-80.))
-          if (sflux(l) < 0.1*rflux(l)) sflux(l) = 0.1*rflux(l)
-          if (xuvfac > epsil .and. wavel(l) < 51.0 .and. waves(l) > 17.0) &
-            sflux(l)=sflux(l)*xuvfac
-        enddo
+        sflux(:) = rflux(:) * (1. + a(:)*(p107-80.))
+        
+        where(sflux(:) < 0.1*rflux(:))   sflux(:) = 0.1*rflux(:)
+        
+        where(xuvfac > epsil .and. wavel(:) < 51.0 .and. waves(:) > 17.0)
+          sflux(:)=sflux(:)*xuvfac
+        endwhere
       endif
 
 ! User-supplied data:
@@ -191,20 +197,17 @@
           enddo
           close(u)
         endif
-        do l=1,lmax
-          sflux(l)=uflux(l)
-        enddo
+
+        sflux(:) = uflux(:)
+
       endif
 
 ! Fill wavelength arrays:
 
-      do l=1,lmax
-        wave1(l) = wavel(l)
-        wave2(l) = waves(l)
-      enddo
+      wave1(:) = wavel(:)
+      wave2(:) = waves(:)
+
 
       islast=iscale
-
-      return
 
     end subroutine ssflux
