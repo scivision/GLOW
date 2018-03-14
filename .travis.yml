@@ -32,7 +32,7 @@ before_install:
 install: 
   - pip install -e .[tests]
   - cd bin
-  - cmake
+  - cmake ..
   - make
 
 script: 
