@@ -1,5 +1,8 @@
 |Build Status|
 
+.. image:: https://ci.appveyor.com/api/projects/status/u6j9m9oqqax80qf6?svg=true
+    :target: https://ci.appveyor.com/project/scivision/glow
+
 ====
 GLOW
 ====
@@ -37,11 +40,15 @@ Fortran-only (optional)
 
 While many users use the Python interface to Glow, users on HPCC may
 want to use MPI directly in Fortran using the Makefiles or CMake. 
-Here's how to compile the ``basic`` example with CMake::
+Here's how to compile the ``basic`` example with CMake
+
+.. code:: bash
 
     cd bin
     cmake ..
     make
+    make test
+    
     cd ..
 
 This creates:

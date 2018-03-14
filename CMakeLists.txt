@@ -1,10 +1,10 @@
-cmake_minimum_required (VERSION 2.8.12)
+cmake_minimum_required (VERSION 3.7)
 project(glow Fortran)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ..)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ..)
 
-add_compile_options(-O0 -g)
+add_compile_options(-O3 -g)
 
 if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Intel")
     add_compile_options(-debug full -traceback -fpe-all=0 -check all)
@@ -58,3 +58,23 @@ if(MPI_Fortran_COMPILER)
     target_link_libraries(driver PRIVATE glow ionetcdf ${MPI_Fortran_LIBRARIES})
 endif()
 
+#---------- testing
+enable_testing()
+
+add_test(NAME GlowBasic COMMAND testdrv
+         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+         
+if (NOT WIN32)
+  add_test(NAME GlowBasicOutput COMMAND sh -c "./testdrv -d | diff reference/aur981.basic.out -"
+         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+  set_tests_properties(GlowBasicOutput PROPERTIES
+                    PASS_REGULAR_EXPRESSION "")
+endif()
+
+
+find_package(PythonInterp)
+if(NOT $ENV{APPVEYOR} AND PYTHON_VERSION_STRING STRGREATER_EQUAL 3.6)
+#if(PYTHONINTERP_FOUND)
+  add_test(NAME Python COMMAND pytest -v
+         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+endif()

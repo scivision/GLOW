@@ -87,9 +87,9 @@ def test_egrid_maxt():
 #    print('this mismatch is in discussion with S. Solomon.   {}'.format(e))
 
 def test_solzen():
-    sza = glow.solzen(yd,utsec,glat,glon)
+    sza = glow.sun_angles.solzen(yd,utsec,glat,glon)
     assert isclose(sza, 133.43113708496094)
-    return sza
+
 
 #def test_snoem():
 #    doy = datetime2gtd(dtime)[0]
@@ -105,7 +105,7 @@ def test_snoemint():
         znoint = glow.snoemint(dtime.strftime('%Y%j'),glat,glon,f107,ap,z,
                                    tempd.loc[:,'Tn'])
         assert_allclose(znoint[[28,143]], (1.262170e+08,  3.029169e+01),rtol=1e-5) #arbitrary
-        return znoint
+
 
 #def test_fieldm():
 #    xdip,ydip,zdip,totfield,dipang,decl,smodip = glow.fieldm(glat,glon%360,z[50])
