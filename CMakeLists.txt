@@ -70,10 +70,9 @@ if (NOT WIN32)
   set_tests_properties(GlowBasicOutput PROPERTIES
                     PASS_REGULAR_EXPRESSION "")
 endif()
-
+ 
 find_package(PythonInterp)
-if((NOT ENV{APPVEYOR}) AND (PYTHON_VERSION_STRING STRGREATER_EQUAL 3.6))
-#if(PYTHONINTERP_FOUND)
+if((NOT DEFINED ENV{APPVEYOR}) AND PYTHONINTERP_FOUND)
   add_test(NAME Python COMMAND pytest -v
          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 endif()

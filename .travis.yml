@@ -29,10 +29,13 @@ before_install:
   - ln -s /usr/bin/gfortran-6 ~/.local/bin/gfortran
   - export PATH="$HOME/.local/bin/:$PATH"
 
-install: pip install -e .[tests]
+install: 
+  - pip install -e .[tests]
+  - cd bin
+  - cmake
+  - make
 
 script: 
-  - cd bin
   - make test
 
 after_success:
