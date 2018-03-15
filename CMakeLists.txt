@@ -34,45 +34,44 @@ target_link_libraries(basic glow)
 add_executable(testdrv basic.f90 basic_drv.f90)
 target_link_libraries(testdrv glow)
 
+# temporarily commented out since it grabs Anaconda NetCDF, which doesn't work.
 #---------- NetCDF (optional) ------------
-find_package(netCDF)
-if(netCDF_DIR)
-    include_directories(${netCDF_INCLUDE_DIR})
-
-    add_library(ionetcdf readtgcm.f90 output.f90 )
-    target_link_libraries(ionetcdf PRIVATE netcdff glow) # yes double "ff"
-    
-    message(STATUS "NetCDF Found:" ${netCDF_INCLUDE_DIR})
-endif()
+#find_package(netCDF)
+#if(netCDF_DIR)
+#    include_directories(${netCDF_INCLUDE_DIR})
+#
+#    add_library(ionetcdf readtgcm.f90 output.f90 )
+#    target_link_libraries(ionetcdf PRIVATE netcdff glow) # yes double "ff"
+#    
+#    message(STATUS "NetCDF Found:" ${netCDF_INCLUDE_DIR})
+#endif()
 #---------- MPI (optional) -------------
-find_package(MPI)
-if(MPI_Fortran_COMPILER)
-    # wrapper compiler mpif90
-    #set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER}) 
-    
-    add_definitions(${MPI_Fortran_COMPILE_FLAGS})
-    include_directories(${MPI_Fortran_INCLUDE_PATH})
-    add_compile_options(-pthread)
-
-    add_executable(driver glowdriver.f90 tzgrid.f90)
-    target_link_libraries(driver PRIVATE glow ionetcdf ${MPI_Fortran_LIBRARIES})
-endif()
+#find_package(MPI)
+#if(MPI_Fortran_COMPILER)
+#    # wrapper compiler mpif90
+#    #set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER}) 
+#    
+#    add_definitions(${MPI_Fortran_COMPILE_FLAGS})
+#    include_directories(${MPI_Fortran_INCLUDE_PATH})
+#    add_compile_options(-pthread)
+#
+#    add_executable(driver glowdriver.f90 tzgrid.f90)
+#    target_link_libraries(driver PRIVATE glow ionetcdf ${MPI_Fortran_LIBRARIES})
+#endif()
 
 #---------- testing
 enable_testing()
 
 add_test(NAME GlowBasic COMMAND testdrv
          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-         
-if (NOT WIN32)
-  add_test(NAME GlowBasicOutput COMMAND sh -c "./testdrv -d | diff reference/aur981.basic.out -"
+
+if(PYTHON_VERSION_STRING STRGREATER_EQUAL 3.6)
+  add_test(NAME GlowOutput COMMAND pytest tests/test_fortran.py -v
          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-  set_tests_properties(GlowBasicOutput PROPERTIES
-                    PASS_REGULAR_EXPRESSION "")
 endif()
- 
+         
 find_package(PythonInterp)
-if((NOT DEFINED ENV{APPVEYOR}) AND PYTHONINTERP_FOUND)
+if((NOT DEFINED ENV{APPVEYOR}) AND (PYTHON_VERSION_MAJOR GREATER_EQUAL 3))
   add_test(NAME Python COMMAND pytest -v
          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 endif()
