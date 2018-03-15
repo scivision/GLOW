@@ -28,7 +28,7 @@ def test_fortran():
 
     ref = _csv2dat(root/'reference/aur981.basic.out')
 
-    np.testing.assert_allclose(data,ref,rtol=0.001)
+    np.testing.assert_allclose(data,ref,rtol=0.01)
 
     return data
 
