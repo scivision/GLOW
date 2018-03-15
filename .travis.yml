@@ -42,3 +42,5 @@ after_success:
   - coverage run ../tests/test_all.py
   - coveralls
 
+after_failure:
+  - ctest -V
