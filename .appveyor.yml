@@ -15,8 +15,6 @@ before_build:
 # fix CMake sh.exe issue, by removing Git path.
 - cmd: set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
 - cmd: set FC=%MINGW_DIR%\gfortran 
-- cmd: set CXX=%MINGW_DIR%\g++ 
-- cmd: set CC=%MINGW_DIR%\gcc
 - cmd: mklink bin\make.exe %MINGW_DIR%\mingw32-make.exe
 
 - sh: sudo apt-get -yq update > /dev/null
