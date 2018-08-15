@@ -10,8 +10,6 @@ import xarray
 import numpy as np
 from sciencedates import datetime2yeardoy, find_nearest
 import gridaurora as ga
-from gridaurora.zglow import glowalt
-
 # Fortran GLOW
 import glowfort
 
@@ -32,9 +30,15 @@ def runglowaurora(params: dict, z_km: np.ndarray=None) -> xarray.Dataset:
     yeardoy, utsec = datetime2yeardoy(params['time'])[:2]
 
     condx = ga.getApF107(params['time'], smoothdays=81)
-# %% (0) define altitude grid [km]
-    if z_km is None:
-        z_km = glowalt()
+# %% (0) define altitude grid [km]. For this program, must have 102 elements as in mzgrid.f90
+    z_km = np.arange(80, 110, 1)
+    z_km = np.append(z_km, [110., 111.5, 113., 114.5])
+    z_km = np.append(z_km, np.arange(116, 136, 2))
+    z_km = np.append(z_km, [137., 140., 144., 148., 153., 158., 164., 170])
+    z_km = np.append(z_km, np.arange(176, 204, 7))
+    z_km = np.append(z_km, np.arange(205, 253, 8))
+    z_km = np.append(z_km, np.arange(254, 299, 9))
+    z_km = np.append(z_km, np.arange(300, 650, 10))
 # %% (1) setup flux at top of ionosphere
     ener, dE = glowfort.egrid()
 

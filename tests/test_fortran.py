@@ -3,9 +3,10 @@ import subprocess
 import io
 from pathlib import Path
 import pandas
-import numpy as np
+import pytest
+from pytest import approx
 #
-root = Path(__file__).parents[1]
+root = Path(__file__).resolve().parents[1]
 
 
 def test_fortran():
@@ -27,10 +28,10 @@ def test_fortran():
 
     ref = _csv2dat(root/'reference/aur981.basic.out')
 
-    np.testing.assert_allclose(data, ref, rtol=0.05)
+    assert data.values == approx(ref, rel=0.05)
 
     return data
 
 
 if __name__ == '__main__':
-    data = test_fortran()
+    pytest.main(['-x', __file__])

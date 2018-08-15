@@ -60,7 +60,7 @@ def test_pythonglow():
     sim = glowiono.runglowaurora(params)
 
     assert sim.sza == approx(81.09193)
-    assert sim['zeta'].loc[120, '5577'] == approx(277.558258, rel=0.001)
+    assert sim['zeta'].loc[120, '5577'].item() == approx(278.38916, rel=0.001)
 
 
 def test_egrid_maxt():
@@ -87,10 +87,12 @@ def test_egrid_maxt():
 #    print('this mismatch is in discussion with S. Solomon.   {}'.format(e))
 
 
-def test_solzen():
+@pytest.fixture
+def solzen():
     sza = glowfort.sun_angles.solzen(yd, utsec, glat, glon)
     assert sza == approx(133.43113708496094)
 
+    return sza
 
 # def test_snoem():
 #    doy = datetime2gtd(dtime)[0]
@@ -98,16 +100,18 @@ def test_solzen():
 #   assert_allclose((nozm[12,15],nozm[-2,-1]),(35077728.0, 1.118755e+08))
 #    return nozm
 
-def test_snoemint():
+
+@pytest.fixture
+def snoemint():
     msise00 = pytest.importorskip('msise00')
 
-    densd, tempd = msise00.rungtd1d(dtime, z, glat, glon)
+    atmos = msise00.rungtd1d(dtime, z, glat, glon)
 # (nighttime background ionization)
-    print(tempd)
-    znoint = glowfort.snoemint(dtime.strftime('%Y%j'), glat, glon, f107, ap, z,
-                               tempd.loc[:, 'Tn'])
-    assert znoint[[28, 143]] == approx([1.262170e+08, 3.029169e+01], rel=1e-5)  # arbitrary
 
+    znoint = glowfort.snoemint(dtime.strftime('%Y%j'), glat, glon, f107, ap, z, atmos['Tn'].values)
+    assert znoint[[28, 143]] == approx([1.2621697e+08, 1.1102819e+03], rel=1e-5)  # arbitrary
+
+    return znoint
 
 # def test_fieldm():
 #    xdip,ydip,zdip,totfield,dipang,decl,smodip = glowfort.fieldm(glat,glon%360,z[50])
@@ -120,28 +124,31 @@ def test_snoemint():
 #    wave1,wave2,sflux = glowfort.ssflux(iscale,f107,f107a,hlybr,fexvir,hlya,heiew,xuvfac)
 #    assert_allclose(sflux[[11,23]],(4.27225743e+11,   5.54400400e+07))
 
+
 def test_rcolum_qback():
     msise00 = pytest.importorskip('msise00')
 
-    densd, tempd = msise00.rungtd1d(dtime, z, glat, glon)
+    atmos = msise00.rungtd1d(dtime, z, glat, glon)
 
     """ VCD: Vertical Column Density """
-    sza = test_solzen()
+    sza = solzen()
+    D = atmos[['O', 'O2', 'N2']].to_dataframe().values.T
+
     zcol, zvcd = glowfort.rcolum(sza, z * 1e5,
-                                 densd.loc[:, ['O', 'O2', 'N2']].values.T,
-                                 tempd.loc[:, 'Tn'])
+                                 D,
+                                 atmos['Tn'])
 # FIXME these tests were numerically unstable (near infinity values)
     assert zcol[0, 0] == approx(1e30)  # see rcolum comments for sun below horizon 1e30
     assert zvcd[2, 5] == approx(5.97157e+28, rel=1e-2)  # TODO changes a bit between python 2 / 3
 # %% skipping EPHOTO since we care about night time more for now
-    znoint = test_snoemint()
+    znoint = snoemint()
     # zeros because nighttime
     photoi = zeros((nst, nmaj, jmax), dtype=float32, order='F')
     phono = zeros((nst, jmax), dtype=float32, order='F')
-    glowfort.qback(zmaj=densd.loc[:, ['O', 'O2', 'N2']].values.T,
+    glowfort.qback(zmaj=D,
                    zno=znoint,
                    zvcd=zvcd,
-                   photoi=photoi, phono=phono)
+                   photoi=photoi, phono=phono, f107=f107)
     # arbitrary point check
     assert photoi[0, 0, 77] == approx(1.38091e-18, rel=1e-5)
     assert phono[0, 73] == approx(0.0, rel=1e-5)

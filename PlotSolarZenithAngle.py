@@ -15,15 +15,15 @@ import astropy.units as u
 from astropy.coordinates import get_sun, EarthLocation, AltAz
 from astropy.time import Time
 #
-from sciencedates import datetime2yd
+from sciencedates import datetime2yeardoy
 #
-import glow as glowfort
+import glowfort
 
 
 def demosolzen(t: datetime, glat: float, glon: float):
     """demo the solar zenith angle calclation vs AstroPy"""
 # %% SZA with glow
-    yd, utsec = datetime2yd(dtime)
+    yd, utsec = datetime2yeardoy(dtime)
 
     sza_glow = np.empty_like(dtime, dtype=float)
     for j, (d, s) in enumerate(zip(yd, utsec)):
@@ -34,7 +34,7 @@ def demosolzen(t: datetime, glat: float, glon: float):
 
 def demosuncor(T, glat, glon, alt_m):
     # %% Solar location with GLOW
-    yd, utsec = datetime2yd(T)[:2]
+    yd, utsec = datetime2yeardoy(T)[:2]
     solar = xarray.DataArray(np.empty((T.size, 2, 4)),
                              dims=['time', 'algorithm', 'coord'],
                              coords={'time': T,
@@ -92,7 +92,7 @@ def solarzenithangle(t, glat, glon, alt_m):
 
 if __name__ == '__main__':
     dtime = date_range('2013-04-01', '2013-04-02',
-                       freq='2Min', tz='utc', closed='left').to_pydatetime()
+                       freq='2Min', closed='left').to_pydatetime()
     lat = 65
     lon = -148
     alt_m = 0  # to be fair to GLOW
