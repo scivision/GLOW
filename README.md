@@ -39,14 +39,9 @@ cd ..
 
 This creates:
 
-  
-  executable     | description
-  ---------------|-------------------
-  basic          |  basic GLOW
-                 |
-  driver         |  MPI/NetCDF GLOW
-                 |
-  testdrv        | Python intfc test
+* `basic`  basic GLOW
+* `driver`  MPI/NetCDF GLOW
+* `testdrv`  Python intfc test
 
 
 #### Fortran examples
