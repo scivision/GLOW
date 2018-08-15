@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/scivision/GLOW.svg?branch=master)](https://travis-ci.org/scivision/GLOW)
-[![image](https://ci.appveyor.com/api/projects/status/u6j9m9oqqax80qf6?svg=true)](https://ci.appveyor.com/project/scivision/glow)
+[![Build status](https://ci.appveyor.com/api/projects/status/u6j9m9oqqax80qf6?svg=true)](https://ci.appveyor.com/project/scivision/glow)
 
 # GLOW
 
