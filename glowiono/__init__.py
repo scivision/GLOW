@@ -5,20 +5,15 @@ code wrapping in Python by Michael Hirsch
 """
 from pathlib import Path
 import logging
-from itertools import chain
 from datetime import datetime
 import xarray
 import numpy as np
-#
 from sciencedates import datetime2yeardoy, find_nearest
-try:
-    from gridaurora import getApF107
-    from gridaurora.zglow import glowalt
-except ImportError:
-    getApF107 = glowalt = None
+import gridaurora as ga
+from gridaurora.zglow import glowalt
+
 # Fortran GLOW
-import glow as glowfort
-# path monkey patching
+import glowfort
 
 GRIDERR = 'gridaurora is required for this program.  pip install gridaurora.'
 
@@ -27,37 +22,19 @@ def runglowaurora(params: dict, z_km: np.ndarray=None) -> xarray.Dataset:
     """ Runs Fortran GLOW program and collects results in friendly arrays with metadata. """
     # %% (-2) check/process user inputs
     assert isinstance(params['flux'], (float, int, np.ndarray))
-    assert isinstance(params['E0'],   (float, int))
-    assert isinstance(params['t0'],   (datetime, str))
+    assert isinstance(params['E0'], (float, int))
+    assert isinstance(params['time'], (datetime, str))
     assert isinstance(params['glat'], (float, int))
     assert isinstance(params['glon'], (float, int))
-# %% (-1) if no manual f10.7 and ap, autoload by date
-    if not 'f107a' in params or params['f107a'] is None:
-        if getApF107 is None:
-            raise ImportError(GRIDERR)
-        f107Ap = getApF107(params['t0'])
-        params['f107a'] = params['f107p'] = f107Ap['f107s'].item()
-        params['f107'] = f107Ap['f107'].item()
-        params['Ap'] = (f107Ap['Ap'].item(),)*7
-
 # %% flux grid / date
     eflux = np.atleast_1d(params['flux'])
 
-    yeardoy, utsec = datetime2yeardoy(params['t0'])[:2]
+    yeardoy, utsec = datetime2yeardoy(params['time'])[:2]
+
+    condx = ga.getApF107(params['time'], smoothdays=81)
 # %% (0) define altitude grid [km]
-
-# FIXME: dynamic grid
-    z_km = np.array(list(range(80, 110, 1)) +
-                    [110., 111.5, 113., 114.5] +
-                    list(range(116, 136, 2)) +
-                    [137., 140., 144., 148., 153., 158., 164., 170] +
-                    list(chain(range(176, 204, 7), range(205, 253, 8), range(254, 299, 9), range(300, 650, 10))))
-
     if z_km is None:
-        if glowalt is not None:
-            z_km = glowalt()
-        else:
-            raise ImportError(GRIDERR)
+        z_km = glowalt()
 # %% (1) setup flux at top of ionosphere
     ener, dE = glowfort.egrid()
 
@@ -78,13 +55,13 @@ def runglowaurora(params: dict, z_km: np.ndarray=None) -> xarray.Dataset:
     assert phi.shape[1] == 3
 # %% (2) msis,iri,glow model
     glowfort.glowbasic(yeardoy, utsec, params['glat'], params['glon'] % 360,
-                       params['f107a'], params['f107'], params['f107p'], params['Ap'],
+                       condx['f107s'], condx['f107'], condx['f107s'], condx['Ap'],
                        z_km, pyphi=phi, pyverbose=False,)
 # %% (3) collect outputs
 
     lamb = [3371, 4278, 5200, 5577, 6300, 7320, 10400, 3466, 7774, 8446, 3726,
             'LBH', 1356, 1493, 1304]  # same for ZETA and ZCETA
-    ions = ['nO+(2P)', 'nO+(2D)', 'nO+(4S)', 'nN+', 'nN2+', 'nO2+', 'nNO+', 'nO', 'nO2', 'nN2', 'nNO']
+#    ions = ['nO+(2P)', 'nO+(2D)', 'nO+(4S)', 'nN+', 'nN2+', 'nO2+', 'nNO+', 'nO', 'nO2', 'nN2', 'nNO']
     neut = ['O', 'O2', 'N2']
 
     sim = xarray.Dataset()
@@ -158,7 +135,7 @@ def runglowaurora(params: dict, z_km: np.ndarray=None) -> xarray.Dataset:
     return sim
 
 
-def rundayglow(t0, glat, glon, f107a, f107, f107p, ap, conj=True):
+def rundayglow(time, glat, glon, f107a, f107, f107p, ap, conj=True):
     '''
     Run GLOW for no auroral input, to simulate Dayglow.
 
@@ -169,15 +146,15 @@ def rundayglow(t0, glat, glon, f107a, f107, f107p, ap, conj=True):
     '''
 
 # %% (-2) check/process user inputs
-    assert isinstance(t0,   (datetime, str))
+    assert isinstance(time, (datetime, str))
     assert isinstance(glat, (float, int))
     assert isinstance(glon, (float, int))
 
 # %% flux grid / date
 
-    yd, utsec = datetime2yd(t0)[:2]
+    yd, utsec = datetime2yeardoy(time)[:2]
 # %% (0) define altitude grid [km]
-    #z = glowalt()
+    # z = glowalt()
     z = np.concatenate((range(30, 110, 1), np.logspace(np.log10(110), np.log10(1200), 90)))
 
 # %% (1) setup external flux at top of ionosphere. Set it to zero. Photoelectron flux from
@@ -207,7 +184,7 @@ def rundayglow(t0, glat, glon, f107a, f107, f107p, ap, conj=True):
 
     sim['photIon'] = xarray.DataArray(dims=['z_km', 'type'],
                                       coords={'z_km': z,
-                                              'type': ['photoIoniz', 'eImpactIoniz', 'ne']+products},
+                                              'type': ['photoIoniz', 'eImpactIoniz', 'ne'] + products},
                                       data=np.hstack((photI[:, None], ImpI[:, None], ecalc[:, None], ion)))
 
     sim['isr'] = xarray.DataArray(dims=['z_km', 'param'],
@@ -246,18 +223,18 @@ def verprodloss(params: dict):
 
     """
     simparams = ('prates', 'lrates', 'ver', 'tez')
-    if isinstance(params['t0'], (list, tuple)):
-        params['t0'] = params['t0'][0]
-        print('using time', params['t0'])
+    if isinstance(params['time'], (list, tuple)):
+        params['time'] = params['time'][0]
+        print('using time', params['time'])
 
-    assert isinstance(params['t0'], datetime)
+    assert isinstance(params['time'], datetime)
 
     EK = np.atleast_1d(params['EK'])
 
     sim = xarray.Dataset(coords={'EK': EK})
 
     for e in EK:
-        print(f'{params["t0"]} E0: {e:.0f}')
+        print(f'{params["time"]} E0: {e:.0f}')
         params['E0'] = e
 
         s = runglowaurora(params)

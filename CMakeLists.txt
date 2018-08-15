@@ -64,14 +64,3 @@ enable_testing()
 
 add_test(NAME GlowBasic COMMAND testdrv
          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-
-find_package(PythonInterp)
-if(PYTHON_VERSION_MAJOR GREATER_EQUAL 3)
-  if(DEFINED ENV{APPVEYOR}) 
-      add_test(NAME GlowOutput COMMAND python tests/test_fortran.py
-               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-  else()
-    add_test(NAME Python COMMAND pytest -v
-             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-  endif()
-endif()
