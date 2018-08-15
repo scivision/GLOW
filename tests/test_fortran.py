@@ -28,7 +28,7 @@ def test_fortran():
 
     ref = _csv2dat(root/'reference/aur981.basic.out')
 
-    assert data.values == approx(ref, rel=0.05)
+    assert data.values == approx(ref.values, rel=0.05)
 
     return data
 
