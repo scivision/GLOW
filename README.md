@@ -1,9 +1,13 @@
 [![Build Status](https://travis-ci.org/scivision/GLOW.svg?branch=master)](https://travis-ci.org/scivision/GLOW)
+[![Coverage Status](https://coveralls.io/repos/github/scivision/GLOW/badge.svg?branch=master)](https://coveralls.io/github/scivision/GLOW?branch=master)
 [![Build status](https://ci.appveyor.com/api/projects/status/u6j9m9oqqax80qf6?svg=true)](https://ci.appveyor.com/project/scivision/glow)
+[![PyPi version](https://img.shields.io/pypi/pyversions/glowiono.svg)](https://pypi.python.org/pypi/glowiono)
+[![PyPi formats](https://img.shields.io/pypi/format/glowiono.svg)](https://pypi.python.org/pypi/glowiono)
+[![PyPi Download stats](http://pepy.tech/badge/glowiono)](http://pepy.tech/project/glowiono)
 
 # GLOW
 
-The GLobal airglOW Model -- aurora and dayglow, IR-VIS-UV-EUV
+The GLobal airglOW Model 0.981 -- aurora and dayglow, IR-VIS-UV-EUV
 
 ## Install
 
@@ -82,24 +86,24 @@ meld reference/out.basic.day <(./basic < in.basic.day)
 #### MPI Prereq
 
 Allows parallel execution of GLOW Fortran code for HPC:
-
-    apt install libopenmpi-dev
+```sh
+apt install libopenmpi-dev
+```
 
 #### NetCDF prereq
 
 allows reading/writing data in NetCDF (optional):
-
-    apt install libnetcdf-dev libnetcdff-dev
+```sh
+apt install libnetcdf-dev libnetcdff-dev
+```
 
 #### Select Fortran compiler
 
 Simply use the variable `FC`:
-
-    cd bin/
-    rm -r *
-
-    FC=ifort cmake ..
-    cmake --build .
+```sh
+FC=ifort cmake ..
+cmake --build .
+```
 
 NOTE: Using the Intel compiler requires that you have 
 [built NetCDF using Intel Fortran](https://software.intel.com/en-us/articles/performance-tools-for-software-developers-building-netcdf-with-the-intel-compilers/).

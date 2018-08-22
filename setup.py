@@ -9,6 +9,8 @@ src = ['basic.f90', 'cglow.f90', 'glow.f90', 'bands.f90', 'conduct.f90', 'egrid.
        'qback.f90', 'rcolum.f90', 'snoem.f90', 'snoemint.f90', 'solzen.f90', 'ssflux.f90', 'iri90.f',
        'nrlmsise00.f']
 
+src = [join('src', s) for s in src]
+
 ext = Extension(name='glowfort', sources=src)
 
 iridata = glob(join('data/iri90', '*.asc'))
