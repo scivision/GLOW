@@ -12,8 +12,7 @@ from numpy import array, zeros, float32, nan
 import pytest
 from pytest import approx
 from sciencedates import datetime2yeardoy
-import glowfort
-import glowiono
+import glowiono as gi
 
 rdir = Path(__file__).resolve().parents[1]
 os.chdir(rdir)
@@ -57,17 +56,17 @@ def test_pythonglow():
               'plotformat': [],
               }
 
-    sim = glowiono.runglowaurora(params)
+    sim = gi.runglowaurora(params)
 
     assert sim.sza == approx(81.09193)
     assert sim['zeta'].loc[120, '5577'].item() == approx(278.38916, rel=0.001)
 
 
 def test_egrid_maxt():
-    ener, dE = glowfort.egrid()
+    ener, dE = gi.glowfort.egrid()
     assert ener[[maxind, maxind + 10, -1]] == approx([1017.7124, 1677.9241, 47825.418], rel=1e-5)
 # %% test of maxt
-    phi = glowfort.maxt(eflux, e0, ener, dE, itail=0, fmono=nan, emono=nan)
+    phi = gi.glowfort.maxt(eflux, e0, ener, dE, itail=0, fmono=nan, emono=nan)
     assert phi.argmax() == maxind
     assert phi[[maxind, maxind + 10]] == approx([114810.6, 97814.438])
 
@@ -89,7 +88,7 @@ def test_egrid_maxt():
 
 @pytest.fixture
 def solzen():
-    sza = glowfort.sun_angles.solzen(yd, utsec, glat, glon)
+    sza = gi.glowfort.sun_angles.solzen(yd, utsec, glat, glon)
     assert sza == approx(133.43113708496094)
 
     return sza
@@ -108,7 +107,7 @@ def snoemint():
     atmos = msise00.rungtd1d(dtime, z, glat, glon)
 # (nighttime background ionization)
 
-    znoint = glowfort.snoemint(dtime.strftime('%Y%j'), glat, glon, f107, ap, z, atmos['Tn'].values)
+    znoint = gi.glowfort.snoemint(dtime.strftime('%Y%j'), glat, glon, f107, ap, z, atmos['Tn'].values)
     assert znoint[[28, 143]] == approx([1.2621697e+08, 1.1102819e+03], rel=1e-5)  # arbitrary
 
     return znoint
@@ -134,9 +133,9 @@ def test_rcolum_qback():
     sza = solzen()
     D = atmos[['O', 'O2', 'N2']].to_dataframe().values.T
 
-    zcol, zvcd = glowfort.rcolum(sza, z * 1e5,
-                                 D,
-                                 atmos['Tn'])
+    zcol, zvcd = gi.glowfort.rcolum(sza, z * 1e5,
+                                    D,
+                                    atmos['Tn'])
 # FIXME these tests were numerically unstable (near infinity values)
     assert zcol[0, 0] == approx(1e30)  # see rcolum comments for sun below horizon 1e30
     assert zvcd[2, 5] == approx(5.97157e+28, rel=1e-2)  # TODO changes a bit between python 2 / 3
@@ -145,10 +144,10 @@ def test_rcolum_qback():
     # zeros because nighttime
     photoi = zeros((nst, nmaj, jmax), dtype=float32, order='F')
     phono = zeros((nst, jmax), dtype=float32, order='F')
-    glowfort.qback(zmaj=D,
-                   zno=znoint,
-                   zvcd=zvcd,
-                   photoi=photoi, phono=phono, f107=f107)
+    gi.glowfort.qback(zmaj=D,
+                      zno=znoint,
+                      zvcd=zvcd,
+                      photoi=photoi, phono=phono, f107=f107)
     # arbitrary point check
     assert photoi[0, 0, 77] == approx(1.38091e-18, rel=1e-5)
     assert phono[0, 73] == approx(0.0, rel=1e-5)
