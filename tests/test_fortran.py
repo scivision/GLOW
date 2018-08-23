@@ -8,11 +8,13 @@ import os
 from pytest import approx
 #
 R = Path(__file__).resolve().parents[1]
-exe = './testdrv'
-if os.name == 'nt':
-    exe = exe[2:]
+exe = 'testdrv'
+SKIP = not (R/exe).is_file()
+if os.name != 'nt':
+    exe = './' + exe
 
 
+@pytest.mark.skipif(SKIP, reason='testdrv exe not found.')
 def test_fortran():
 
     def _csv2dat(txt):

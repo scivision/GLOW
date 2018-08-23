@@ -6,9 +6,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ..)
 
 add_compile_options(-O3 -g)
 
-if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Intel")
+if(${CMAKE_Fortran_COMPILER_ID} STREQUAL Intel)
     add_compile_options(-debug full -traceback -fpe-all=0 -check all)
-else()
+else(${CMAKE_Fortran_COMPILER_ID} STREQUAL GNU)
     add_compile_options(-mtune=native -Wall -Warray-bounds -fexceptions -fbacktrace)
 endif()
 
@@ -63,4 +63,4 @@ target_link_libraries(testdrv glow)
 enable_testing()
 
 add_test(NAME GlowBasic COMMAND testdrv
-         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
