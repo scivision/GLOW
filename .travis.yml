@@ -1,4 +1,7 @@
+# Need gfortran-5 or newer. This is easiest way to get it.
 language: python
+sudo: required
+dist: xenial
 group: travis_latest
 
 git:
@@ -11,13 +14,10 @@ python:
 os:
 - linux
 
-env: FC=gfortran-5
-
 addons:
   apt:
-    sources: ubuntu-toolchain-r-test
     packages:
-    - gfortran-5
+    - gfortran
 
 install:
 - pip install -e .[tests]

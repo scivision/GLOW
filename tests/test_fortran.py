@@ -27,7 +27,7 @@ def test_fortran():
 
         return pandas.concat((comp, light), axis=1, join='inner')
 
-    ret = subprocess.check_output(['./testdrv', '-v'], cwd=R, universal_newlines=True)
+    ret = subprocess.check_output([exe, '-v'], cwd=R, universal_newlines=True)
     data = _csv2dat(ret)
 
     ref = _csv2dat(R/'reference/aur981.basic.out')
