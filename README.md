@@ -34,7 +34,7 @@ Here's how to compile the `basic` example with CMake
 ```sh
 cd bin
 
-cmake ..
+cmake ../src
 cmake --build .
 ctest -V
 
@@ -101,7 +101,7 @@ apt install libnetcdf-dev libnetcdff-dev
 
 Simply use the variable `FC`:
 ```sh
-FC=ifort cmake ..
+FC=ifort cmake ../src
 cmake --build .
 ```
 

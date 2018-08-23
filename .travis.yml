@@ -23,7 +23,7 @@ install:
 - pip install -e .[tests]
 
 - cd bin
-- cmake ..
+- cmake ../src
 - cmake --build .
 
 script:
