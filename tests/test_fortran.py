@@ -4,9 +4,13 @@ import io
 from pathlib import Path
 import pandas
 import pytest
+import os
 from pytest import approx
 #
-root = Path(__file__).resolve().parents[1]
+R = Path(__file__).resolve().parents[1]
+exe = './testdrv'
+if os.name == 'nt':
+    exe = exe[2:]
 
 
 def test_fortran():
@@ -23,10 +27,10 @@ def test_fortran():
 
         return pandas.concat((comp, light), axis=1, join='inner')
 
-    ret = subprocess.check_output(['./testdrv', '-v'], cwd=root, universal_newlines=True)
+    ret = subprocess.check_output(['./testdrv', '-v'], cwd=R, universal_newlines=True)
     data = _csv2dat(ret)
 
-    ref = _csv2dat(root/'reference/aur981.basic.out')
+    ref = _csv2dat(R/'reference/aur981.basic.out')
 
     assert data.values == approx(ref.values, rel=0.05)
 
