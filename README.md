@@ -2,7 +2,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/scivision/GLOW/badge.svg?branch=master)](https://coveralls.io/github/scivision/GLOW?branch=master)
 [![Build status](https://ci.appveyor.com/api/projects/status/u6j9m9oqqax80qf6?svg=true)](https://ci.appveyor.com/project/scivision/glow)
 [![PyPi version](https://img.shields.io/pypi/pyversions/glowiono.svg)](https://pypi.python.org/pypi/glowiono)
-[![PyPi formats](https://img.shields.io/pypi/format/glowiono.svg)](https://pypi.python.org/pypi/glowiono)
 [![PyPi Download stats](http://pepy.tech/badge/glowiono)](http://pepy.tech/project/glowiono)
 
 # GLOW
