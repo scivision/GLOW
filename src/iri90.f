@@ -171,13 +171,13 @@ C
 
       character(256) path
       character(16) filename
-      INTEGER 		EGNR,AGNR,DAYNR,DDO,DO2,SEASON,SEADAY
+      INTEGER   DAYNR,DDO,DO2,SEASON,SEADAY
       REAL 		LATI,LONGI,MO2,MO,MODIP,NMF2,MAGBR
-      REAL  		NMF1,NME,NMD,NEI,MM,MLAT,MLONG,NOBO2
+      REAL                NMF1,NME,NMD,MM,MLAT,MLONG,NOBO2
       DIMENSION  F(3),RIF(4),E(4),XDELS(4),DNDS(4)
       DIMENSION  FF0(988),XM0(441),F2(13,76,2),FM3(9,49,2)
       DIMENSION  AMP(4),HXL(4),SCL(4),B0B1(5)
-      DIMENSION  CTN(3),CTNN(3),XSM(4),MM(5),DTI(4)
+      DIMENSION  XSM(4),MM(5),DTI(4)
       DIMENSION  AHH(7),STTE(6),DTE(5),ATE(7),TEA(6),HOA(3),XNAR(3)
       DIMENSION  PG1O(80),PG2O(32),PG3O(80),PF1O(12),PF2O(4),PF3O(12)
       DIMENSION  HO(4),MO(5),DDO(4),HO2(2),MO2(3),DO2(2),DION(7)
@@ -199,27 +199,18 @@ C
      &      B0B1  /.755566,.778596,.797332,.812928,.826146/
       data icalls/0/
 C
-      SAVE EGNR,AGNR,DAYNR,DO2,SEASON,SEADAY,LATI,LONGI,MO2,
-     &     MODIP,MAGBR,NMF1,NEI,MLAT,MLONG,NOBO2,
+      SAVE DAYNR,DO2,SEASON,SEADAY,LATI,LONGI,MO2,
+     &     MODIP,MAGBR,NMF1,MLAT,MLONG,NOBO2,
      &     F,RIF,FF0,XM0,F2,FM3,AMP,HXL,SCL,
-     &     CTN,CTNN,ATE,TEA,HOA,XNAR,PG1O,
+     &     ATE,TEA,HOA,XNAR,PG1O,
      &     PG2O,PG3O,PF1O,PF2O,PF3O,HO,MO,DDO,HO2,DION,EXT,
-     &     SCHALT,SSIN,TCON,F1REG,FOF2IN,HMF2IN,URSIF2,LAYVER,
+     &     SCHALT,TCON,F1REG,FOF2IN,HMF2IN,URSIF2,LAYVER,
      &     DY,GULB0,NODEN,NOTEM,NOION,TENEOP,OLD79,TOPSI,BOTTO,BELOWE,
      &     URSIFO,MONTH,MONTHO,RG,RGO
 C
 C PROGAM CONSTANTS
 C
 	icalls=icalls+1
-        HHALF = 0.
-
-!       write(6,"('Enter iri90: icalls=',i4,' jf=',12l2,' jmax=',i4,
-!    |    ' alati=',f8.2,' along=',f8.2)")
-!    |    icalls,jf,jmax,alati,along
-!       write(6,"('rz12=',f8.2,' mmdd=',i4,' dhour=',f8.2,' nz=',i4)")
-!    |    rz12,mmdd,dhour,nz
-!       write(6,"('DIRECT (file path)=',a)") direct
-!       write(6,"('zkm=',/,(8f9.2))") zkm
 
 	ARGMAX=88.0
      	UMR=ATAN(1.0)*4./180.
@@ -442,8 +433,8 @@ C
         MONTHO=MONTH
 	GOTO 4291
 
-8448       write(error_unit,8449) trim(path)
-8449       format('IRI90: File ',A,' not found')
+8448  write(error_unit,*) 'IRI90: File ' ,trim(path),
+     &   'not found'
 ! must be "error stop" so Travis-CI tests, etc. fail when this fails.
        error stop
 C
@@ -698,12 +689,12 @@ C---------- CALCULATION OF NEUTRAL TEMPERATURE PARAMETER-------
         ENDIF
       TLBDH=TEXOS-TN120
       TLBDN=TEXNI-TN1NI
-C
-C--------- CALCULATION OF ELECTRON TEMPERATURE PARAMETER--------
-C
-881   CONTINUE
 
-C !!!!!!!!!! TE(120KM)=TN(120KM) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!--------- CALCULATION OF ELECTRON TEMPERATURE PARAMETER--------
+
+      CONTINUE
+
+!!!!!!!!!! TE(120KM)=TN(120KM) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ATE(1)=TN120
 
 !!!!!!!!!! TE-MAXIMUM (JICAMARCA,ARECIBO) !!!!!!!!!!!!!!!!!!!!
@@ -788,12 +779,12 @@ C !!!!!!!!!! TANGENT ON TN DETERMINES HS !!!!!!!!!!!!!!!!!!!!!!
       CALL REGFA1(130.0,500.0,TI13,TI50,0.01,TI1,TEDER,SCHALT,HS)
       IF(SCHALT) HS=200.
       TNHS=TN(HS,TEXOS,TLBDH,SIGMA)
-      MM(1)=DTNDH(HS,TEXOS,TLBDH,SIGMA)
+      MM(1)=DTNDH(HS,  TLBDH,SIGMA)
       IF(SCHALT) MM(1)=(TI1-TNHS)/(XSM1-HS)
       MXSM=2
 
 C !!!!!!!!!! XTETI ALTITTUDE WHERE TE=TI !!!!!!!!!!!!!!!!!!!!!!
-2391    XTTS=500.
+        XTTS=500.
         X=500.
 2390    X=X+XTTS
         IF(X.GE.AHH(7)) GOTO 240
@@ -945,7 +936,7 @@ C
 
       do 7118 kk=1,nz
       height=zkm(kk)
-300   IF(NODEN) GOTO 330
+      IF(NODEN) GOTO 330
       IF((HEIGHT.GT.HNEE).OR.(HEIGHT.LT.HNEA)) GOTO 330
 	IF(LAYVER) THEN
 	  ELEDE=-9.
@@ -1464,22 +1455,28 @@ c----------------------------------------------------------------
       REAL 		MM
       COMMON  /BLOCK8/  HS,TNHS,XSM(4),MM(5),G(4),M
 
-      SUM=MM(1)*(H-HS)+TNHS                        
+      SUMM=MM(1)*(H-HS)+TNHS
       DO 100 I=1,M-1  
 	aa = eptr(h ,g(i),xsm(i))
 	bb = eptr(hs,g(i),xsm(i))
-100   	SUM=SUM+(MM(I+1)-MM(I))*(AA-BB)*G(I)                
-      TI=SUM          
-      RETURN          
-      END             
+100          SUMM=SUMM+(MM(I+1)-MM(I))*(AA-BB)*G(I)
+      TI=SUMM
+
+      END FUNCTION TI
 C
 C
       REAL FUNCTION TEDER(H)                       
+      Implicit None
+
+      Real,Intent(In) :: H
+
+      Real,External :: TN,DTNDH
+      Real XSM1,TEX,TLBD,SIG,dtdx,tnh
 C THIS FUNCTION ALONG WITH PROCEDURE REGFA1 ALLOWS TO FIND                      
 C THE  HEIGHT ABOVE WHICH TN BEGINS TO BE DIFFERENT FROM TI                     
       COMMON	/BLOTN/XSM1,TEX,TLBD,SIG
       TNH = TN(H,TEX,TLBD,SIG)                        
-      DTDX = DTNDH(H,TEX,TLBD,SIG)                        
+      DTDX = DTNDH(H,TLBD,SIG)
       TEDER = DTDX * ( XSM1 - H ) + TNH                    
       END FUNCTION TEDER
 C
@@ -1789,7 +1786,7 @@ C NQ(K1) IS AN INTEGER ARRAY GIVING THE HIGHEST DEGREES IN
 C LATITUDE FOR EACH LONGITUDE HARMONIC.                  
 C M=1+NQ1+2(NQ2+1)+2(NQ3+1)+... .                  
 C SHEIKH,4.3.77.      
-      REAL*8 C(12),S(12),COEF(100),SUM             
+      REAL*8 C(12),S(12),COEF(100),SUMM
       DIMENSION NQ(K1),XSINX(13),SFE(M3)           
       COMMON/CONST/UMR
       HOU=(15.0*HOUR-180.0)*UMR                    
@@ -1805,13 +1802,13 @@ C SHEIKH,4.3.77.
       DO 300 J=1,IHARM                             
       COEF(I)=COEF(I)+SFE(MI+2*J)*S(J)+SFE(MI+2*J+1)*C(J)                       
 300   CONTINUE        
-      SUM=COEF(1)     
+      SUMM=COEF(1)
       SS=SIN(SMODIP*UMR)                           
       S3=SS           
       XSINX(1)=1.0    
-      INDEX=NQ(1)     
-      DO 350 J=1,INDEX                             
-      SUM=SUM+COEF(1+J)*SS                         
+      INDX=NQ(1)
+      DO 350 J=1,INDX
+      SUMM=SUMM+COEF(1+J)*SS
       XSINX(J+1)=SS   
       SS=SS*S3        
 350   CONTINUE        
@@ -1823,18 +1820,18 @@ C SHEIKH,4.3.77.
       S0=SLONG*(J-1.)*UMR                          
       S1=COS(S0)      
       S2=SIN(S0)      
-      INDEX=NQ(J)+1   
-      DO 450 L=1,INDEX                             
+      INDX=NQ(J)+1
+      DO 450 L=1,INDX
       NP=NP+1         
-      SUM=SUM+COEF(NP)*XSINX(L)*SS*S1              
+      SUMM=SUMM+COEF(NP)*XSINX(L)*SS*S1
       NP=NP+1         
-      SUM=SUM+COEF(NP)*XSINX(L)*SS*S2              
+      SUMM=SUMM+COEF(NP)*XSINX(L)*SS*S2
 450   CONTINUE        
       SS=SS*S3        
 400   CONTINUE        
-      GAMMA1=SUM      
-      RETURN          
-      END             
+      GAMMA1=SUMM
+
+      END FUNCTION GAMMA1
 C
 C                     
 C************************************************************                   
@@ -2369,9 +2366,7 @@ C ------------------------------------------------------------ PEAK
 	D2 = 1. + D0
 	EPLA = D0 / ( D2 * D2 )
        END FUNCTION EPLA
-c
-c
-	FUNCTION XE2TO5(H,HMF2,NL,HX,SC,AMP)
+      real FUNCTION XE2TO5(H,HMF2,NL,HX,SC,AMP)
 C----------------------------------------------------------------------
 C NORMALIZED ELECTRON DENSITY (N/NMF2) FOR THE MIDDLE IONOSPHERE FROM 
 C HME TO HMF2 USING LAY-FUNCTIONS.
@@ -2383,8 +2378,7 @@ C----------------------------------------------------------------------
 	   zlay=10.**ylay
 1	   sum=sum*zlay
 	XE2TO5 = sum
-	RETURN
-	END
+      END FUNCTION XE2TO5
 C
 C
 	REAL FUNCTION XEN(H,HMF2,XNMF2,HME,NL,HX,SC,AMP)
@@ -2400,10 +2394,9 @@ C
 		XEN = XNMF2 * XE2TO5(H,HMF2,NL,HX,SC,AMP)
 		RETURN
 200	XEN = XE6(H)
-	RETURN
-	END
-C
-C
+    END FUNCTION XEN
+
+
 	SUBROUTINE VALGUL(XHI,HVB,VWU,VWA,VDP)
 C --------------------------------------------------------------------- 
 C   CALCULATES E-F VALLEY PARAMETERS; T.L. GULYAEVA, ADVANCES IN
@@ -2454,8 +2447,8 @@ C
 	GRO = 0.8 - 0.2 / ( 1. + EXP(XS) )
 c same as gro=0.6+0.2/(1+exp(-xs))
        END Subroutine Rogul
-C
-C
+
+
 	SUBROUTINE LNGLSN ( N, A, B, AUS)
 C --------------------------------------------------------------------
 C SOLVES QUADRATIC SYSTEM OF LINEAR EQUATIONS:
@@ -2573,8 +2566,7 @@ C
 		DO 8 I=1,N
 8			VAR(I) = ALI(N,I)
 		ENDIF
-	RETURN
-	END
+      END SUBROUTINE LSKNM
 C
 C
 	SUBROUTINE INILAY(NIGHT,XNMF2,XNMF1,XNME,VNE,HMF2,HMF1, 
@@ -2721,13 +2713,12 @@ C
 		GOTO 2299
 		ENDIF
 1937	    IF(SSIN) IQUAL=2
-	    RETURN
-	    END
-c
-c
+      END subroutine inilay
+
+
 	subroutine ioncom(h,z,f,fs,t,cn)
 
-       integer,intent(in) :: t
+      real,intent(in) :: t
 c---------------------------------------------------------------
 c ion composition model
 c A.D. Danilov and A.P. Yaichnikov, A New Model of the Ion
@@ -2993,7 +2984,7 @@ C--------------------------------------------------------------------
       pure real FUNCTION DTNDH(H,TLBD,S)
       implicit None
 
-      Real,Intent(In) :: h,tlbd,s
+      Real,Intent(in) :: h,tlbd,s
 
       Real zg1,zg2,zg3
 C---------------------------------------------------------------------
